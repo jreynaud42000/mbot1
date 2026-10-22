@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+build/
+dist/
+
+# Outils de compilation telecharges par installer_outils.py (environ 150 Mo)
+outils/
+
+# Fichiers temporaires d'Office et de Windows
+~$*
+Thumbs.db
+desktop.ini

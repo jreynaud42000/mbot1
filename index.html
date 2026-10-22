@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Programmation mBot1</title>
+  <link rel="icon" href="logo.png">
+  <!-- Theme, contraste et saison memorises : appliques AVANT le <style> pour eviter un flash de l'etat par defaut. -->
+  <script>
+    try {
+      if (localStorage.getItem('themeApp') === 'light') document.documentElement.dataset.theme = 'light';
+      if (localStorage.getItem('contrasteApp') === 'high') document.documentElement.dataset.contrast = 'high';
+      // Theme de saison (bandeau.js) : « auto » = Halloween du 15 octobre au 2 novembre, salon Educatech Expo
+      // du 2 au 4 decembre 2026, Noel le reste de decembre.
+      var saison = localStorage.getItem('saisonApp');
+      if (saison === 'auto') {
+        var d = new Date(), m = d.getMonth() + 1, j = d.getDate();
+        saison = (m === 10 && j >= 15) || (m === 11 && j <= 2) ? 'halloween'
+          : (d.getFullYear() === 2026 && m === 12 && j >= 2 && j <= 4) ? 'salon' : (m === 12 ? 'noel' : '');
+      }
+      if (saison === 'halloween' || saison === 'noel' || saison === 'salon') document.documentElement.dataset.saison = saison;
+    } catch (erreur) { /* localStorage indisponible (navigation privee) : etat par defaut */ }
+  </script>
+
+  <!-- Bibliotheque EMBARQUEE dans lib/ (aucun CDN) : Blockly 10.4.3, comme les editeurs micro:bit. -->
+  <script src="lib/blockly/blockly_compressed.js"></script>
+  <script src="lib/blockly/blocks_compressed.js"></script>
+  <script src="lib/blockly/msg/fr.js"></script>
+
+  <style>
+    /* ═══ Variables de theme : sombre par defaut, clair = [data-theme="light"], contraste eleve = [data-contrast="high"].
+       Les couleurs « d'appareil » (robot, carte mCore, LED, telecommande) ne suivent pas le theme : elles representent un objet reel. ═══ */
+    :root {
+      --fond-page: #1b1c1f;
+      --fond-chrome: #303030; --texte-chrome: #ffffff;
+      --fond-saisie: #202020; --texte-saisie: #e6e6e6; --bordure-chrome: #555555;
+      --fond-code: #1e1e1e; --texte-code: #d4d4d4;
+      --bandeau: #ff5501; --bandeau-sombre: #d94700; --accent: #ff5501; --accent-fonce: #b33a00; --top-h: 44px;
+      --font: 'Segoe UI', Arial, sans-serif;
+      --btn-green: #4caa3c; --btn-green-h: #3d8e2f;
+      --couleur-bandeau: var(--bandeau-sombre);
+      --ec-page: #1b1c1f;
+      --ec-cat-txt: #ddd; --ec-cat-hover: #2a2c30; --ec-cat-sel: #34363b; --ec-cat-sel-txt: #fff; --ec-cat-lisere: #e8a020;
+      --ec-cat-fw: normal; --ec-cat-bord-droit: 0 solid transparent;
+      --ec-puce-lisere: rgba(255,255,255,0.55); --ec-puce-lisere-w: 1.5px;
+      --ec-grille: #34373d; --ec-flyout: #2a2c31; --ec-flyout-contour: none;
+      --ec-label: #b5b8bf; --ec-label-fw: normal;
+      --ec-sim: #1e1f23; --ec-bord: #3c3f45; --ec-bord-w: 2px; --ec-code: #222327; --ec-code-bord: #3c3f45;
+      --ec-pan: #2a2c31; --ec-pan-bord: #3c3f45; --ec-pan-w: 1px; --ec-pan-txt: #e6e6e6; --ec-sep: #3c3f45; --ec-doux: #a8abb2;
+    }
+    :root[data-theme="light"] {
+      --fond-page: #f4f4f4;
+      --fond-chrome: #ececec; --texte-chrome: #1c1c1c;
+      --fond-saisie: #ffffff; --texte-saisie: #303030; --bordure-chrome: #c8c8c8;
+      --fond-code: #ffffff; --texte-code: #24292e;
+      --couleur-bandeau: var(--bandeau);
+      --ec-page: #e8e8e8;
+      --ec-cat-txt: #ddd; --ec-cat-hover: #444; --ec-cat-sel: #555;
+      --ec-grille: #e8e8e8; --ec-flyout: #d9d9d9;
+      --ec-label: #555;
+      --ec-sim: #f7f7f7; --ec-bord: #aaa; --ec-code: #ffffff; --ec-code-bord: #c8c8c8; --ec-sep: #ccc;
+      --ec-pan: #ffffff; --ec-pan-bord: #c8c8c8; --ec-pan-txt: #24292e; --ec-doux: #5c6168;
+    }
+    :root[data-contrast="high"] {
+      --fond-chrome: #000; --texte-chrome: #fff;
+      --fond-saisie: #000; --texte-saisie: #fff; --bordure-chrome: #fff;
+      --fond-code: #000; --texte-code: #fff;
+      --couleur-bandeau: #000;
+      --ec-page: #000;
+      --ec-cat-txt: #fff; --ec-cat-hover: #333; --ec-cat-sel: #fff; --ec-cat-sel-txt: #000; --ec-cat-lisere: transparent;
+      --ec-cat-fw: 600; --ec-cat-bord-droit: 3px solid #fff;
+      --ec-puce-lisere: #fff; --ec-puce-lisere-w: 2px;
+      --ec-grille: #444; --ec-flyout: #000; --ec-flyout-contour: 3px solid #fff;
+      --ec-label: #fff; --ec-label-fw: 700;
+      --ec-sim: #000; --ec-bord: #fff; --ec-bord-w: 3px; --ec-code: #000; --ec-code-bord: #fff;
+      --ec-pan: #000; --ec-pan-bord: #fff; --ec-pan-w: 2px; --ec-pan-txt: #fff; --ec-sep: #fff; --ec-doux: #fff;
+    }
+    :root[data-theme="light"][data-contrast="high"] {
+      --fond-chrome: #fff; --texte-chrome: #000;
+      --fond-saisie: #fff; --texte-saisie: #000; --bordure-chrome: #000;
+      --fond-code: #fff; --texte-code: #000;
+      --ec-page: #e8e8e8;
+      --ec-cat-txt: #000; --ec-cat-hover: #e6e6e6; --ec-cat-sel: #000; --ec-cat-sel-txt: #fff;
+      --ec-cat-bord-droit: 3px solid #000;
+      --ec-puce-lisere: #000;
+      --ec-grille: #bbb; --ec-flyout: #fff; --ec-flyout-contour: 3px solid #000;
+      --ec-label: #000;
+      --ec-sim: #fff; --ec-bord: #000; --ec-code: #fff; --ec-code-bord: #000;
+      --ec-pan: #fff; --ec-pan-bord: #000; --ec-pan-txt: #000; --ec-sep: #000; --ec-doux: #000;
+    }
+
+    /* Themes de saison : variantes du sombre en contraste normal (bandeau.js). Les couleurs des blocs ne changent pas. */
+    :root[data-saison="halloween"]:not([data-theme="light"]):not([data-contrast="high"]) {
+      --bandeau-sombre: #2b1740; --accent-fonce: #ff7a1a;
+      --fond-saisie: #0c0814; --texte-saisie: #f3e8ff; --fond-code: #120c1c; --bordure-chrome: #4a2e5e;
+      --ec-page: #0c0814; --ec-cat-hover: #2a1f3a; --ec-cat-sel: #3a2552; --ec-cat-lisere: #ff7a1a;
+      --ec-grille: #2a2036; --ec-flyout: #1d1530;
+      --ec-sim: #120c1c; --ec-bord: #3a2552; --ec-code: #120c1c; --ec-code-bord: #3a2552;
+      --ec-pan: #1d1530; --ec-pan-bord: #3a2552; --ec-sep: #3a2552;
+    }
+    :root[data-saison="noel"]:not([data-theme="light"]):not([data-contrast="high"]) {
+      --bandeau-sombre: #b3122e; --accent-fonce: #f1f3f5;
+      --fond-saisie: #08131f; --texte-saisie: #e3eefa; --fond-code: #0b1826; --bordure-chrome: #2a4a6b;
+      --ec-page: #0a1622; --ec-cat-hover: #1b3350; --ec-cat-sel: #22405f; --ec-cat-lisere: #ffd43b;
+      --ec-grille: #1c2e44; --ec-flyout: #13263a;
+      --ec-sim: #0d1b2a; --ec-bord: #22405f; --ec-code: #0b1826; --ec-code-bord: #22405f;
+      --ec-pan: #13263a; --ec-pan-bord: #22405f; --ec-sep: #22405f;
+    }
+    :root[data-saison="salon"]:not([data-theme="light"]):not([data-contrast="high"]) {
+      --bandeau-sombre: #4b3a9e; --accent-fonce: #e0218a;
+      --fond-saisie: #0c1030; --texte-saisie: #e6e9ff; --fond-code: #0f1438; --bordure-chrome: #2f3a7a;
+      --ec-page: #0c1030; --ec-cat-hover: #222a63; --ec-cat-sel: #2c3577; --ec-cat-lisere: #2bb3a0;
+      --ec-grille: #222a5c; --ec-flyout: #171c47;
+      --ec-sim: #12163a; --ec-bord: #2c3577; --ec-code: #0f1438; --ec-code-bord: #2c3577;
+      --ec-pan: #171c47; --ec-pan-bord: #2c3577; --ec-sep: #2c3577;
+    }
+
+    html, body { height: 100%; }
+    body { margin: 0; padding: 0; font-family: var(--font); display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+      background: var(--ec-page); color: var(--ec-pan-txt); }
+    button, input, select, textarea { font-family: inherit; }
+
+    /* ═══ BANDEAU DU HAUT (charte Technologie Services : orange #ff5501, plus profond en sombre, noir en contraste eleve) ═══ */
+    #toolbar {
+      min-height: var(--top-h); box-sizing: border-box; position: relative;
+      background: var(--bandeau); color: #fff; border-bottom: 3px solid var(--couleur-bandeau);
+      display: flex; align-items: center; flex-wrap: wrap; gap: 4px 2px;
+      padding: 3px 6px; flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.25); z-index: 100;
+    }
+    :root:not([data-theme="light"]) #toolbar { background: var(--bandeau-sombre); }
+    :root[data-contrast="high"] #toolbar { background: #000; border-bottom: 2px solid var(--bordure-chrome); }
+    :root[data-saison="salon"]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar { background: linear-gradient(90deg, #1f9e8f, #6a2c91); }
+    :root[data-saison]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar { border-bottom-color: var(--accent-fonce); }
+    :root[data-saison="halloween"]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar {
+      border-bottom: 4px solid #ff7a1a;
+      border-image: repeating-linear-gradient(90deg, #ff7a1a 0 18px, #ffd43b 18px 36px, #fff4e6 36px 54px) 1; }
+
+    .tb-btn {
+      display: flex; align-items: center; gap: 4px;
+      padding: 5px 6px; margin: 0; border: none; background: transparent; color: #fff;
+      cursor: pointer; border-radius: 4px; font-size: 13px; font-weight: normal; white-space: nowrap; transition: background 0.15s;
+    }
+    .tb-btn:hover { background: rgba(255,255,255,0.15); }
+    .tb-btn svg { flex-shrink: 0; }
+    .tb-btn:disabled, .tb-btn:disabled:hover { opacity: 0.45; cursor: not-allowed; background: transparent; }
+    .tb-btn.vue:not(.inactif) { box-shadow: inset 0 -3px 0 #fff; border-radius: 4px 4px 0 0; }
+    .tb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.25); margin: 0 2px; }
+    #tb-logo { display: flex; align-items: center; padding: 3px 6px; margin-right: 2px; flex-shrink: 0;
+      background: #fff; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+    #tb-logo img { height: 24px; width: auto; display: block; }
+    #tb-titre { font-weight: 700; font-size: 14px; margin: 0 6px 0 2px; white-space: nowrap; }
+    #tb-nomfichier { max-width: 240px; background: #fff; color: var(--couleur-bandeau); font-weight: 700;
+      padding: 4px 10px; margin: 0 2px; border: 2px solid #fff; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); cursor: text; }
+    :root[data-contrast="high"] #tb-nomfichier { color: #000; }
+    #nom-fichier { width: 120px; min-width: 0; border: none; outline: none; background: transparent;
+      color: inherit; font: inherit; font-weight: 700; padding: 0; margin: 0; text-overflow: ellipsis; }
+
+    .tb-dropdown { position: relative; }
+    .tb-dropdown-menu {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0;
+      background: #fff; color: #333; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      min-width: 190px; z-index: 1000; overflow: hidden;
+    }
+    .tb-dropdown-menu.open { display: block; }
+    .tb-dropdown-menu button {
+      display: block; width: 100%; text-align: left; padding: 8px 14px; margin: 0; border: none; background: none;
+      cursor: pointer; font-size: 13px; font-weight: normal; color: #333; border-radius: 0; white-space: nowrap;
+    }
+    .tb-dropdown-menu button[hidden] { display: none; }   /* sinon « display: block » ci-dessus affiche les boutons masques */
+    .tb-dropdown-menu button:hover { background: #f0f0f0; }
+    .menu-titre { padding: 8px 14px 3px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #888; }
+    .menu-trait { border-top: 1px solid rgba(128,128,128,0.35); margin: 4px 0; }
+    .tb-dropdown-menu button.choisi { font-weight: 700; color: var(--accent-fonce); }
+    .tb-dropdown-menu button.choisi::after { content: '  ✓'; }
+    #menu-aide-panneau { left: auto; right: 0; min-width: 240px; }
+    .menu-version { padding: 7px 14px 8px; border-top: 1px solid rgba(128,128,128,0.35); font-size: 11.5px; color: #888; cursor: default; }
+    :root:not([data-theme="light"]) .tb-dropdown-menu { background: #2a2c31; color: #e6e6e6; }
+    :root:not([data-theme="light"]) .tb-dropdown-menu button { color: #e6e6e6; }
+    :root:not([data-theme="light"]) .tb-dropdown-menu button:hover { background: #3a3d43; }
+    :root:not([data-theme="light"]) .tb-dropdown-menu button.choisi { color: #ff7a33; }
+    :root[data-contrast="high"] .tb-dropdown-menu { border: 2px solid var(--bordure-chrome); background: var(--fond-chrome); }
+    :root[data-contrast="high"] .tb-dropdown-menu button { color: var(--texte-chrome); }
+    :root[data-contrast="high"] .tb-btn { font-weight: 600; }
+    :root[data-contrast="high"] .tb-btn:hover { background: #fff; color: #000; }
+
+    #tb-droite { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+    #btn-envoyer { background: #1c7ed6; color: #fff; padding: 6px 11px; font-size: 14px; font-weight: 700; }
+    #btn-envoyer:hover { background: #1864ab; }
+    :root[data-contrast="high"] #btn-envoyer { background: #fff; color: #000; border: 2px solid #fff; }
+    #tb-direct { background: #7048e8; padding: 6px 11px; font-size: 14px; font-weight: 700; }
+    #tb-direct:hover { background: #5f3dc4; }
+    #tb-direct.running { background: #c0392b; }
+    :root[data-contrast="high"] #tb-direct { background: #fff; color: #000; border: 2px solid #fff; }
+    #tb-lancer { background: var(--btn-green); padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 14px;
+      border: none; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    #tb-lancer:hover { background: var(--btn-green-h); }
+    #tb-lancer.running { background: #c0392b; }
+    #tb-lancer.running:hover { background: #a5322a; }
+    .voyant { display: inline-block; width: 10px; height: 10px; box-sizing: border-box; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.75); background: transparent; flex-shrink: 0; }
+    .voyant.connecte { background: #4cd964; border-color: #fff; box-shadow: 0 0 0 2px #1a7a2e; }
+
+    /* Decors de saison (bandeau.js) */
+    #tb-saison, #deco-saison, #guirlande-saison { display: none; }
+    :root[data-saison]:not([data-theme="light"]):not([data-contrast="high"]) #tb-saison { display: block; font-size: 20px; line-height: 1; margin: 0 2px; user-select: none; }
+    :root[data-saison]:not([data-theme="light"]):not([data-contrast="high"]) #deco-saison {
+      display: block; position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 60; }
+    #deco-saison > * { position: absolute; display: none; }
+    :root[data-saison="halloween"] #deco-saison > .deco-halloween, :root[data-saison="noel"] #deco-saison > .deco-noel,
+    :root[data-saison="salon"] #deco-saison > .deco-salon { display: block; }
+    #deco-saison svg { overflow: visible; }
+    .deco-lune { top: 16px; right: 64px; width: 70px; height: 70px; filter: drop-shadow(0 0 18px rgba(255, 232, 163, 0.45)); }
+    .deco-toile { top: 0; right: 0; width: 110px; height: 110px; opacity: 0.55; }
+    .deco-manoir { right: 100px; bottom: 0; width: 190px; height: 130px; }
+    .deco-citrouilles { right: 300px; bottom: 6px; width: 96px; height: 46px; }
+    .deco-chauves { top: 24px; right: 160px; width: 280px; height: 110px; }
+    .deco-chauves .chauve { animation: deco-vole 6s ease-in-out infinite; transform-box: fill-box; }
+    .deco-chauves .chauve:nth-child(2) { animation-duration: 7.5s; animation-delay: -2s; }
+    .deco-chauves .chauve:nth-child(3) { animation-duration: 5s; animation-delay: -4s; }
+    @keyframes deco-vole { 0%, 100% { transform: translate(0, 0) scaleY(1); } 25% { transform: translate(-40px, -10px) scaleY(0.6); }
+      50% { transform: translate(-70px, 6px) scaleY(1); } 75% { transform: translate(-30px, 12px) scaleY(0.6); } }
+    .deco-brume { left: 0; right: 0; bottom: 0; height: 80px;
+      background: linear-gradient(to top, rgba(200, 190, 230, 0.2), rgba(200, 190, 230, 0)); animation: deco-brume 7s ease-in-out infinite alternate; }
+    @keyframes deco-brume { to { opacity: 0.45; } }
+    .deco-lueur { animation: deco-lueur 2.4s ease-in-out infinite; }
+    .deco-lueur-2 { animation: deco-lueur 2.4s ease-in-out -1.2s infinite; }
+    @keyframes deco-lueur { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    :root[data-saison="noel"]:not([data-theme="light"]):not([data-contrast="high"]) #guirlande-saison {
+      display: block; position: absolute; left: 0; top: calc(100% + 1px); width: 100%; height: 26px; pointer-events: none; overflow: hidden; }
+    .deco-neige { inset: 0; opacity: 0.75;
+      background-image: radial-gradient(circle, #fff 2.4px, transparent 3.2px), radial-gradient(circle, #cfe8ff 1.5px, transparent 2.2px);
+      background-size: 110px 110px, 70px 70px; background-position: 0 0, 35px 20px; animation: deco-neige 14s linear infinite; }
+    .deco-neige-2 { opacity: 0.5; background-size: 160px 160px, 95px 95px; background-position: 50px 30px, 10px 60px; animation-name: deco-neige-2; animation-duration: 22s; }
+    .deco-neige-3 { opacity: 0.85; background-image: radial-gradient(circle, #fff 3.6px, transparent 4.6px); background-size: 230px 230px; background-position: 90px 0;
+      animation-name: deco-neige-3; animation-duration: 11s; }
+    @keyframes deco-neige { to { background-position: 30px 110px, 50px 90px; } }
+    @keyframes deco-neige-2 { to { background-position: 30px 190px, 0 155px; } }
+    @keyframes deco-neige-3 { to { background-position: 130px 230px; } }
+    .deco-collines { left: 0; right: 0; bottom: 0; width: 100%; height: 70px; opacity: 0.9; }
+    .deco-sapins { right: 110px; bottom: 14px; width: 150px; height: 70px; }
+    .deco-etoile { top: 14px; right: 30px; width: 34px; height: 34px; filter: drop-shadow(0 0 8px rgba(255, 212, 59, 0.6)); }
+    .deco-circuit-haut { top: 96px; right: 0; width: 320px; height: 190px; }
+    .deco-circuit-bas { left: 230px; bottom: 30px; width: 260px; height: 120px; }
+    .deco-piste { stroke-dasharray: 8 8; animation: deco-piste 3s linear infinite; }
+    @keyframes deco-piste { from { stroke-dashoffset: 32; } to { stroke-dashoffset: 0; } }
+    .deco-badge-salon { top: 14px; right: 24px; padding: 8px 12px; border-radius: 8px; border: 1px solid #e0218a;
+      background: rgba(224, 33, 138, 0.16); color: #ffd6ec; font: 13px/1.35 var(--font); text-align: right; }
+    .deco-badge-salon b { display: block; color: #ffffff; font-size: 14px; }
+    .deco-badge-salon .stand { display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 999px; background: #2bb3a0; color: #04211d; font-weight: 700; }
+    .deco-banniere-salon { left: 0; right: 0; bottom: 0; height: 26px; overflow: hidden; white-space: nowrap; background: #e0218a; color: #ffffff;
+      font: 600 13px/26px var(--font); opacity: 0.94; }
+    .deco-banniere-salon span { display: inline-block; padding-left: 24px; animation: deco-defile 20s linear infinite; }
+    @keyframes deco-defile { from { transform: translateX(0); } to { transform: translateX(-25%); } }
+    @media (prefers-reduced-motion: reduce) { #deco-saison *, #guirlande-saison * { animation: none !important; } }
+
+    /* ═══ ZONE PRINCIPALE : blocs | simulation | code, console en bas ═══ */
+    #principal { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    #main-container { flex: 1 1 auto; display: flex; min-height: 0; }
+    #blockly-wrapper { flex: 1 1 auto; position: relative; min-width: 260px; }
+    #blocklyDiv { position: absolute; inset: 0; }
+    .panneau { flex: 0 0 auto; display: flex; flex-direction: column; min-height: 0; overflow: auto; box-sizing: border-box; }
+    .panneau.replie { display: none !important; }
+    #simulator-container { width: clamp(300px, 32vw, 470px); background: var(--ec-sim); border-left: var(--ec-bord-w) solid var(--ec-bord); padding: 10px; gap: 10px; }
+    #code-container { width: clamp(260px, 25vw, 400px); background: var(--ec-code); border-left: var(--ec-bord-w) solid var(--ec-code-bord); padding: 8px 10px; }
+    .titre-panneau { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: var(--ec-pan-txt); margin-bottom: 6px; }
+    .titre-panneau .espace { flex: 1; }
+    .petit-btn { font-size: 12px; padding: 4px 9px; margin: 0; border: 1px solid var(--bordure-chrome); border-radius: 4px; cursor: pointer;
+      background: var(--fond-saisie); color: var(--texte-saisie); font-weight: normal; }
+    .petit-btn:hover { border-color: var(--accent); }
+    #code-display { flex: 1 1 auto; margin: 0; padding: 8px; overflow: auto; white-space: pre; font: 12.5px/1.5 Consolas, "DejaVu Sans Mono", monospace;
+      color: var(--texte-code); background: var(--fond-code); border: 1px solid var(--bordure-chrome); border-radius: 4px; tab-size: 4; }
+    #code-display .kw { color: #c678dd; } #code-display .com { color: #7f8c8d; font-style: italic; } #code-display .str { color: #98c379; }
+    #code-display .num { color: #d19a66; } #code-display .deco { color: #e5c07b; }
+    :root[data-theme="light"] #code-display .kw { color: #a626a4; } :root[data-theme="light"] #code-display .str { color: #50a14f; }
+    :root[data-theme="light"] #code-display .num { color: #986801; } :root[data-theme="light"] #code-display .deco { color: #c18401; }
+    :root[data-contrast="high"] #code-display span { color: inherit !important; font-style: normal; }
+
+    #console-panneau { flex: 0 0 auto; height: 150px; display: flex; flex-direction: column; background: var(--ec-code);
+      border-top: var(--ec-bord-w) solid var(--ec-code-bord); padding: 4px 10px 6px; box-sizing: border-box; }
+    #console-sortie { flex: 1 1 auto; overflow: auto; margin: 0; font: 12.5px/1.45 Consolas, monospace; color: var(--texte-code); white-space: pre-wrap; }
+    #console-sortie .err { color: #ff6b6b; } #console-sortie .ok { color: #51cf66; } #console-sortie .info { color: var(--ec-doux); }
+    #console-sortie .robot { color: #74c0fc; }
+    :root[data-theme="light"] #console-sortie .ok { color: #2b8a3e; } :root[data-theme="light"] #console-sortie .robot { color: #1864ab; }
+    :root[data-theme="light"] #console-sortie .err { color: #c92a2a; }
+
+    /* ═══ SIMULATEUR ═══ */
+    .bloc-sim { background: var(--ec-pan); border: var(--ec-pan-w) solid var(--ec-pan-bord); border-radius: 6px; padding: 8px; color: var(--ec-pan-txt); }
+    .ligne-outils { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 6px; }
+    .ligne-outils select { font-size: 12px; padding: 3px 4px; background: var(--fond-saisie); color: var(--texte-saisie); border: 1px solid var(--bordure-chrome); border-radius: 4px; }
+    #piste { width: 100%; display: block; border-radius: 4px; cursor: grab; touch-action: none; background: #fff; }
+    #piste.glisse { cursor: grabbing; }
+    .aide-piste { font-size: 11px; color: var(--ec-doux); margin-top: 4px; }
+    #mesures { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 4px; margin-top: 6px; font-size: 11.5px; }
+    #mesures div { background: var(--fond-saisie); border: 1px solid var(--bordure-chrome); border-radius: 4px; padding: 3px 5px; }
+    #mesures b { display: block; font-size: 13px; color: var(--texte-saisie); }
+    #mesures span { color: var(--ec-doux); }
+
+    /* Carte mCore et telecommande : objets reels, couleurs fixes */
+    #carte-zone { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+    #mcore { position: relative; width: 190px; height: 150px; flex: 0 0 auto; border-radius: 10px; background: linear-gradient(160deg, #2e7d32, #1b5e20);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.45), inset 0 0 0 2px #43a047; color: #e8f5e9; font: 700 10px var(--font); }
+    #mcore-nom { position: absolute; left: 0; right: 0; top: 8px; text-align: center; letter-spacing: 0.15em; }
+    .mc-led { position: absolute; top: 34px; width: 22px; height: 22px; border-radius: 50%; background: #2b2f35; border: 2px solid #0f3311; }
+    #mc-led2 { left: 40px; } #mc-led1 { right: 40px; }
+    .mc-etiquette { position: absolute; font-weight: 600; font-size: 9.5px; color: #c8e6c9; }
+    #mc-bouton { position: absolute; left: 70px; top: 82px; width: 50px; height: 30px; border-radius: 6px; border: 2px solid #111; background: #e9ecef; color: #222;
+      font: 700 10px var(--font); padding: 0; margin: 0; cursor: pointer; }
+    #mc-bouton.appuye { background: #ffd43b; }
+    #mc-ir { position: absolute; left: 12px; top: 90px; width: 14px; height: 14px; border-radius: 50%; background: #111; box-shadow: inset 0 0 0 3px #444; }
+    #telecommande { flex: 0 0 auto; width: 132px; padding: 8px; border-radius: 14px; background: #f1f3f5; box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    #telecommande .tc-titre { grid-column: 1 / -1; text-align: center; font: 700 10px var(--font); color: #495057; letter-spacing: 0.08em; }
+    .tc { padding: 3px 0; margin: 0; border: 1px solid #868e96; border-radius: 5px; background: #fff; color: #212529; font: 600 12px var(--font); cursor: pointer; }
+    .tc.lettre { background: #dee2e6; } .tc.fleche { background: #ced4da; }
+    .tc.appuye { background: #ffd43b; }
+    #capteurs-cp { flex: 1 1 140px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
+    #capteurs-cp label { display: flex; flex-direction: column; gap: 2px; }
+    #capteurs-cp input[type="range"] { width: 100%; accent-color: var(--accent); }
+    #capteurs-cp .valeur { color: var(--ec-doux); }
+
+    /* ═══ Fenetre d'envoi au robot ═══ */
+    .voile { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 5000; align-items: center; justify-content: center; }
+    .voile.ouvert { display: flex; }
+    .fenetre { width: 580px; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); overflow: auto; box-sizing: border-box;
+      background: var(--ec-pan); color: var(--ec-pan-txt); border: var(--ec-pan-w) solid var(--ec-pan-bord); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .fenetre header { background: #1c7ed6; color: #fff; padding: 10px 16px; font-weight: 700; font-size: 15px; border-radius: 9px 9px 0 0; }
+    :root[data-contrast="high"] .fenetre header { background: #000; border-bottom: 2px solid #fff; }
+    .fenetre .contenu { padding: 14px 16px; font-size: 13px; line-height: 1.5; }
+    .fenetre .contenu ol { margin: 4px 0 8px; padding-left: 20px; }
+    .fenetre footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 10px 16px 14px; }
+    .fenetre footer button { margin: 0; padding: 7px 14px; font-size: 13px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-principal { background: #1c7ed6; color: #fff; } .btn-principal:hover { background: #1864ab; }
+    .btn-secondaire { background: #4a4a4a; color: #fff; } .btn-secondaire:hover { background: #5e5e5e; }
+    .btn-principal:disabled { opacity: 0.5; cursor: not-allowed; }
+    #envoi-barre { height: 10px; background: var(--fond-saisie); border: 1px solid var(--bordure-chrome); border-radius: 5px; overflow: hidden; margin: 8px 0 4px; }
+    #envoi-barre div { height: 100%; width: 0; background: #1c7ed6; transition: width 0.15s; }
+    #envoi-etat { min-height: 1.4em; font-weight: 600; }
+    #envoi-etat.err { color: #ff6b6b; } #envoi-etat.ok { color: #51cf66; }
+    :root[data-theme="light"] #envoi-etat.err { color: #c92a2a; } :root[data-theme="light"] #envoi-etat.ok { color: #2b8a3e; }
+    .remarque { font-size: 12px; color: var(--ec-doux); }
+
+    /* ═══ Blockly : colonne de categories, puces, tiroir (meme apparence que les editeurs micro:bit) ═══ */
+    .blocklyToolboxDiv { border-right: var(--ec-cat-bord-droit); box-sizing: border-box; }
+    .blocklyToolboxDiv, .blocklyToolboxCategory, .blocklyTreeLabel { font-family: var(--font) !important; }
+    .blocklyToolboxCategory > .blocklyTreeRow .blocklyTreeLabel { font-size: 12.5px; font-weight: var(--ec-cat-fw); color: var(--ec-cat-txt) !important; }
+    .blocklyToolboxCategory > .blocklyTreeRow:hover { background-color: var(--ec-cat-hover) !important; }
+    .blocklyToolboxCategory > .blocklyTreeRow.blocklyTreeSelected { background-color: var(--ec-cat-sel) !important; box-shadow: inset 3px 0 0 var(--ec-cat-lisere); }
+    .blocklyToolboxCategory > .blocklyTreeRow.blocklyTreeSelected .blocklyTreeLabel { color: var(--ec-cat-sel-txt) !important; }
+    .blocklyToolboxCategory .blocklyTreeRow { border-left-width: 0 !important; position: relative; padding-left: 33px !important; }
+    .blocklyToolboxCategory .blocklyTreeRow::before {
+      content: ''; position: absolute; left: 6px; top: 50%; width: 18px; height: 18px; margin-top: -9px; border-radius: 50%;
+      background: var(--puce, #888); box-shadow: 0 0 0 var(--ec-puce-lisere-w) var(--ec-puce-lisere); }
+    .blocklyTreeSeparator { border-bottom: 1px solid var(--ec-sep) !important; margin: 4px 8px; height: 0 !important; }
+    pattern line { stroke: var(--ec-grille) !important; }
+    .blocklyFlyoutBackground { fill: var(--ec-flyout) !important; fill-opacity: 1 !important; }
+    .injectionDiv .blocklyFlyout { outline: var(--ec-flyout-contour); }
+    .injectionDiv .blocklyFlyoutLabelText { fill: var(--ec-label) !important; font-style: italic; font-weight: var(--ec-label-fw); }
+    .trait-groupe-flyout { stroke: var(--ec-label); stroke-opacity: 0.45; stroke-width: 1px; }
+    :root[data-contrast="high"] .trait-groupe-flyout { stroke-opacity: 1; stroke-width: 2px; }
+    :root:not([data-theme="light"]) .blocklyZoom > image { filter: invert(1) brightness(1.15); opacity: 1; }
+    :root:not([data-theme="light"]) .blocklyTrash > image { filter: invert(1) brightness(1.1); opacity: 1; }
+    #recherche-blocs { position: sticky; top: 0; z-index: 5; padding: 8px 8px 6px; background: inherit; }
+    #recherche-blocs svg { position: absolute; left: 17px; top: 50%; margin-top: -4px; color: #9a9a9a; pointer-events: none; }
+    #recherche-blocs input { width: 100%; box-sizing: border-box; padding: 6px 8px 6px 28px; font-size: 13px;
+      border-radius: 4px; border: 1px solid var(--bordure-chrome); background: var(--fond-saisie); color: var(--texte-saisie); }
+    #recherche-blocs input:focus { outline: 2px solid #ff5501; outline-offset: 0; }
+
+    /* Contraste eleve : blocs noirs a contour blanc (sombre), blancs a contour noir (clair). */
+    :root[data-contrast="high"] .blocklyPath { fill: #000 !important; stroke: #fff !important; stroke-width: 3px !important; }
+    :root[data-contrast="high"] .blocklyPathDark { fill: #000 !important; }
+    :root[data-contrast="high"] .blocklyPathLight { stroke: #fff !important; fill: none !important; }
+    :root[data-contrast="high"] .blocklyText { fill: #fff !important; }
+    :root[data-contrast="high"]:not([data-theme="light"]) .blocklyFieldRect { fill: #000 !important; fill-opacity: 1 !important; stroke: #fff !important; stroke-width: 1.5px; }
+    :root[data-theme="light"][data-contrast="high"] .blocklyPath { fill: #fff !important; stroke: #000 !important; }
+    :root[data-theme="light"][data-contrast="high"] .blocklyPathDark,
+    :root[data-theme="light"][data-contrast="high"] .blocklyPathLight { fill: none !important; stroke: none !important; }
+    :root[data-theme="light"][data-contrast="high"] .blocklyText,
+    :root[data-theme="light"][data-contrast="high"] .blocklyText tspan { fill: #000 !important; }
+    :root[data-theme="light"][data-contrast="high"] .blocklyFieldRect { fill: #fff !important; fill-opacity: 1 !important; stroke: #000 !important; stroke-width: 1.5px; }
+
+    /* Aide sur un bloc (menu contextuel) */
+    #aide-bloc .contenu p { margin: 0 0 8px; }
+    #aide-bloc code { font-family: Consolas, monospace; background: var(--fond-saisie); padding: 1px 4px; border-radius: 3px; }
+
+    /* Visite guidee (tuto.js) */
+    #tuto-voile { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 9000; pointer-events: none; }
+    #tuto-consigne { font-weight: bold; color: #8a4b00; }
+    #tuto-fait { display: none; font-weight: bold; color: #1e8449; }
+    #tuto-nav { display: flex; gap: 6px; }
+    #tuto-spot { display: none; position: fixed; z-index: 9001; pointer-events: none; border-radius: 6px;
+      border: 2px solid #ff5501; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55); transition: all 0.2s ease; }
+    #tuto-bulle { display: none; position: fixed; z-index: 9002; width: 340px; max-width: calc(100vw - 16px); box-sizing: border-box;
+      padding: 14px 16px; background: #fffdf5; color: #1b2733; border: 2px solid #ff5501; border-radius: 10px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45); font-size: 13px; line-height: 1.45; }
+    #tuto-bulle h4 { margin: 0 0 6px; font-size: 15px; }
+    #tuto-bulle p { margin: 0 0 8px; }
+    #tuto-compteur { font-size: 11px; color: #8a3a10; margin-bottom: 2px; }
+    #tuto-boutons { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
+    #tuto-bulle button { font-size: 12px; padding: 5px 10px; margin: 0; background: #4a4a4a; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    #tuto-bulle button.pret { background: #27ae60; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <span id="tb-logo" title="Technologie Services"><img src="logo_ts.png" alt="Technologie Services"></span>
+    <span id="tb-titre">mBot1</span>
+
+    <div class="tb-dropdown">
+      <button class="tb-btn" id="menu-fichier-btn" data-menu="menu-fichier-panneau">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg>Fichier ▾</button>
+      <div class="tb-dropdown-menu" id="menu-fichier-panneau">
+        <button id="fichier-nouveau">Nouveau programme</button>
+        <button id="fichier-ouvrir">Ouvrir un programme (.ino)…</button>
+        <button id="fichier-enregistrer">Enregistrer le programme (.ino)</button>
+        <div class="menu-trait"></div>
+        <div class="menu-titre">Exemples</div>
+        <button data-exemple="carre">Tracer un carré</button>
+        <button data-exemple="obstacle">Éviter les obstacles</button>
+        <button data-exemple="ligne">Suivre une ligne</button>
+        <button data-exemple="lumieres">Lumières et sons</button>
+        <button data-exemple="telecommande">Piloter avec la télécommande</button>
+      </div>
+    </div>
+    <div class="tb-dropdown">
+      <button class="tb-btn" id="menu-affichage-btn" data-menu="menu-affichage-panneau">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Affichage ▾</button>
+      <div class="tb-dropdown-menu" id="menu-affichage-panneau">
+        <div class="menu-titre">Thème</div>
+        <button id="aff-theme-sombre">Sombre</button>
+        <button id="aff-theme-clair">Clair</button>
+        <div class="menu-titre">Contraste</div>
+        <button id="aff-contraste-normal">Normal</button>
+        <button id="aff-contraste-eleve">Élevé</button>
+        <div class="menu-titre">Saison</div>
+        <button id="aff-saison-aucune">Aucune</button>
+        <button id="aff-saison-auto">Selon la date</button>
+        <button id="aff-saison-halloween">Halloween</button>
+        <button id="aff-saison-noel">Noël</button>
+        <button id="aff-saison-salon">Salon Educatech Expo</button>
+      </div>
+    </div>
+
+    <label id="tb-nomfichier" title="Nom du programme (cliquez pour le renommer)">
+      <input id="nom-fichier" type="text" value="mon_programme" spellcheck="false" aria-label="Nom du programme">
+    </label>
+    <button class="tb-btn" id="btn-annuler" title="Défaire (Ctrl+Z)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg></button>
+    <button class="tb-btn" id="btn-refaire" title="Refaire (Ctrl+Y)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h3"/></svg></button>
+    <span class="tb-sep"></span>
+    <button class="tb-btn vue" id="btn-vue-simu" title="Afficher / masquer la simulation">Simulation</button>
+    <button class="tb-btn vue" id="btn-vue-code" title="Afficher / masquer le code C++">Code</button>
+    <button class="tb-btn vue" id="btn-vue-console" title="Afficher / masquer la console"><span class="voyant" id="voyant-robot" title="Robot non connecté"></span>Console</button>
+
+    <div id="tb-droite">
+      <button class="tb-btn" id="btn-envoyer" title="Compiler et téléverser le programme dans le mBot1 : il fonctionne ensuite seul (câble USB, Chrome ou Edge)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Envoyer au robot</button>
+      <button class="tb-btn" id="tb-direct" title="Exécuter le programme en pilotant le vrai robot par le câble USB, sans compiler (microprogramme du mode direct)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h4l2-5 4 10 2-5h4"/></svg><span id="tb-direct-label">Mode direct</span></button>
+      <button id="tb-lancer" title="Lancer le programme dans le simulateur">
+        <svg id="tb-lancer-icone" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        <span id="tb-lancer-label">Lancer la simulation</span></button>
+      <div class="tb-dropdown">
+        <button class="tb-btn" id="menu-aide-btn" data-menu="menu-aide-panneau">Aide ▾</button>
+        <div class="tb-dropdown-menu" id="menu-aide-panneau">
+          <button id="aide-visite">Visite guidée de l'éditeur</button>
+          <button id="aide-envoi">Brancher et programmer le mBot1</button>
+          <button id="aide-simulateur">Utiliser le simulateur</button>
+          <div class="menu-version">Éditeur mBot1 V1.0 — Technologie Services</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="principal">
+    <div id="main-container">
+      <div id="blockly-wrapper"><div id="blocklyDiv"></div></div>
+
+      <div id="simulator-container" class="panneau">
+        <div class="bloc-sim">
+          <div class="ligne-outils">
+            <b>Piste</b>
+            <select id="choix-piste" aria-label="Piste du simulateur"></select>
+            <button class="petit-btn" id="btn-replacer" title="Ramener le robot au départ">Replacer</button>
+            <button class="petit-btn" id="btn-obstacle" title="Ajouter un obstacle au centre de la piste">+ Obstacle</button>
+            <label title="Dessiner le faisceau des ultrasons et les capteurs de ligne"><input type="checkbox" id="voir-capteurs" checked> capteurs</label>
+          </div>
+          <canvas id="piste" width="800" height="600" aria-label="Piste du simulateur, vue de dessus"></canvas>
+          <div class="aide-piste">Glissez le robot ou un obstacle pour le déplacer ; molette sur le robot pour le faire pivoter ; double-clic sur un obstacle pour le retirer.</div>
+          <div id="mesures">
+            <div><span>Distance</span><b id="m-distance">—</b></div>
+            <div><span>Ligne gauche droite</span><b id="m-ligne">—</b></div>
+            <div><span>Roue gauche</span><b id="m-gauche">0 %</b></div>
+            <div><span>Roue droite</span><b id="m-droite">0 %</b></div>
+          </div>
+        </div>
+        <div class="bloc-sim" id="carte-zone">
+          <div id="mcore" aria-label="Carte mCore simulée">
+            <div id="mcore-nom">mCore</div>
+            <span class="mc-led" id="mc-led2" title="LED 2"></span><span class="mc-led" id="mc-led1" title="LED 1"></span>
+            <span class="mc-etiquette" style="left: 42px; top: 60px;">LED 2</span><span class="mc-etiquette" style="right: 42px; top: 60px;">LED 1</span>
+            <span id="mc-ir" title="Récepteur infrarouge"></span><span class="mc-etiquette" style="left: 8px; top: 108px;">IR</span>
+            <button id="mc-bouton" title="Bouton de la carte (maintenir appuyé)">bouton</button>
+          </div>
+          <div id="telecommande" aria-label="Télécommande infrarouge simulée">
+            <div class="tc-titre">TÉLÉCOMMANDE</div>
+            <button class="tc lettre" data-ir="69" title="Touche A">A</button>
+            <button class="tc lettre" data-ir="70" title="Touche B">B</button>
+            <button class="tc lettre" data-ir="71" title="Touche C">C</button>
+            <button class="tc lettre" data-ir="68" title="Touche D">D</button>
+            <button class="tc fleche" data-ir="64" title="Touche ▲">▲</button>
+            <button class="tc lettre" data-ir="67" title="Touche E">E</button>
+            <button class="tc fleche" data-ir="7" title="Touche ◀">◀</button>
+            <button class="tc fleche" data-ir="21" title="Touche ⚙">⚙</button>
+            <button class="tc fleche" data-ir="9" title="Touche ▶">▶</button>
+            <button class="tc " data-ir="22" title="Touche 0">0</button>
+            <button class="tc fleche" data-ir="25" title="Touche ▼">▼</button>
+            <button class="tc lettre" data-ir="13" title="Touche F">F</button>
+            <button class="tc " data-ir="12" title="Touche 1">1</button>
+            <button class="tc " data-ir="24" title="Touche 2">2</button>
+            <button class="tc " data-ir="94" title="Touche 3">3</button>
+            <button class="tc " data-ir="8" title="Touche 4">4</button>
+            <button class="tc " data-ir="28" title="Touche 5">5</button>
+            <button class="tc " data-ir="90" title="Touche 6">6</button>
+            <button class="tc " data-ir="66" title="Touche 7">7</button>
+            <button class="tc " data-ir="82" title="Touche 8">8</button>
+            <button class="tc " data-ir="74" title="Touche 9">9</button>
+          </div>
+          <div id="capteurs-cp">
+            <b>Capteurs de la carte</b>
+            <label>Lumière ambiante <span class="valeur" id="v-lumiere">500</span><input type="range" id="r-lumiere" min="0" max="1023" value="500"></label>
+            <span class="valeur" id="v-son">Buzzer : —</span>
+            <span class="remarque">Maintenez un bouton appuyé : le programme le voit tant qu'il est enfoncé.</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="code-container" class="panneau replie">
+        <div class="titre-panneau">Code C++ (Arduino, bibliothèque MeMCore)<span class="espace"></span>
+          <button class="petit-btn" id="btn-copier-code" title="Copier le code dans le presse-papiers">Copier</button></div>
+        <pre id="code-display"></pre>
+      </div>
+    </div>
+
+    <div id="console-panneau" class="panneau">
+      <div class="titre-panneau">Console<span class="espace"></span>
+        <button class="petit-btn" id="btn-console-robot" title="Lire ce que le robot écrit avec « écrire dans la console de l'ordinateur »">Écouter le robot</button>
+        <button class="petit-btn" id="btn-console-effacer">Effacer</button></div>
+      <pre id="console-sortie"></pre>
+    </div>
+  </div>
+
+  <!-- Fenetre d'envoi au robot (televersement.js) -->
+  <div class="voile" id="fenetre-envoi" role="dialog" aria-modal="true" aria-labelledby="envoi-titre">
+    <div class="fenetre">
+      <header id="envoi-titre">Envoyer le programme au mBot1</header>
+      <div class="contenu">
+        <ol>
+          <li>Fermez mBlock et l'IDE Arduino s'ils sont ouverts (un seul logiciel à la fois peut utiliser le câble).</li>
+          <li>Branchez la carte mCore à l'ordinateur avec le câble USB et allumez le mBot1.</li>
+          <li>Cliquez sur « Compiler et envoyer », puis choisissez le port <b>USB-SERIAL CH340</b> dans la fenêtre du navigateur.</li>
+        </ol>
+        <label class="remarque"><input type="checkbox" id="envoi-tous-ports"> Afficher tous les ports série (si le robot n'apparaît pas)</label>
+        <div id="envoi-barre"><div></div></div>
+        <div id="envoi-etat" aria-live="polite"></div>
+        <p class="remarque">Le programme est compilé sur cet ordinateur (serveur local), puis enregistré dans la carte : il démarre aussitôt et
+          reste en mémoire après l'arrêt du robot. Il remplace le microprogramme du mode direct ; le bouton ci-dessous le réinstalle.</p>
+      </div>
+      <footer>
+        <button class="btn-secondaire" id="envoi-autre-port" title="Choisir un autre port USB au prochain envoi">Changer de port</button>
+        <button class="btn-secondaire" id="envoi-microprogramme" title="Réinstaller le programme d'usine qui permet le mode direct">Installer le microprogramme du mode direct</button>
+        <button class="btn-secondaire" id="envoi-fermer">Fermer</button>
+        <button class="btn-principal" id="envoi-go">Compiler et envoyer</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Fenetre d'aide (aide sur un bloc, pages d'aide du menu) -->
+  <div class="voile" id="aide-bloc" role="dialog" aria-modal="true" aria-labelledby="aide-titre">
+    <div class="fenetre">
+      <header id="aide-titre">Aide</header>
+      <div class="contenu" id="aide-contenu"></div>
+      <footer><button class="btn-principal" id="aide-fermer">Fermer</button></footer>
+    </div>
+  </div>
+
+  <input type="file" id="fichier-entree" accept=".ino,text/plain" hidden>
+
+  <script src="blocs.js"></script>
+  <script src="simulateur.js"></script>
+  <script src="televersement.js"></script>
+  <script src="direct.js"></script>
+  <script src="app.js"></script>
+  <!-- Modules : chacun garde ses noms pour lui (ils declarent tous deux « $ »), executes apres les scripts ci-dessus. -->
+  <script type="module" src="bandeau.js"></script>
+  <script type="module" src="tuto.js"></script>
+</body>
+</html>
