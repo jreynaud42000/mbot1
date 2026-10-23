@@ -32,6 +32,7 @@ Makeblock). Il y a trois façons d'exécuter un programme :
 | `simulateur.js` | robot 2D sur piste à l'échelle (200 × 150 cm), ultrasons, suiveur de ligne, LED, buzzer, bouton, télécommande |
 | `direct.js` | mode direct : même code que le simulateur, commandes envoyées au robot (protocole série Makeblock FF 55) |
 | `televersement.js` | lecture du `.hex`, téléversement STK500 (Optiboot) par Web Serial, console du robot |
+| `mbot1.png` | photo du mBot1 vue de dessus, détourée (fond transparent) : robot du simulateur et panneau de la carte |
 | `bandeau.js` | thème, contraste, saisons et décors, puces, recherche de blocs (repris de `blocky_ts_mbot2`) |
 | `tuto.js` | visite guidée (moteur repris de `blockly_ts_mode_classe`, étapes mBot1) |
 | `app.py`, `lancer_projet.bat` | serveur local sans cache ; compile les programmes (`POST /compiler`, `POST /microprogramme`) |
@@ -102,13 +103,14 @@ Les lectures de capteurs sont des questions au robot (`await`), une à la fois.
 
 1. **Envoi réel et mode direct** : jamais testés sur le matériel (vérifiés contre une carte et un microprogramme simulés
    dans la page). Si la carte ne répond pas : pilote CH340, case « Afficher tous les ports série », port déjà ouvert.
-2. **Numéros des LED** : « LED 1 » = indice 1 de `rgbled_7.setColor`, « LED 2 » = indice 2 ; le simulateur dessine la
-   LED 1 à droite, à confirmer.
+2. **Numéros des LED** : « LED 1 » = indice 1 de `rgbled_7.setColor`, « LED 2 » = indice 2 ; le simulateur allume la
+   LED 1 à droite, sur la photo, à une position approximative (`LEDS_PHOTO`), à confirmer.
 3. Formats du mode direct : **relus dans le code du microprogramme** (`mbot_firmware.ino` de la bibliothèque, version
    06.01.107) : bouton (appareil 35, octet 0 → 1 si appuyé), télécommande (14), LED (indice 0 = toutes), moteurs (5),
    buzzer (34). Reste à confirmer sur le robot que le microprogramme d'usine d'un mBot donné parle le même protocole.
-4. **Dimensions** du simulateur : roues de 6,4 cm, entraxe de 11,5 cm et 150 tr/min à 100 % sont **estimés** ; à mesurer
-   (`ROUE_D`, `ENTRAXE`, `RPM_100` en tête de `simulateur.js`), puis régler la durée du quart de tour de l'exemple « carré ».
+4. **Dimensions** du simulateur : roues de 6,6 cm et entraxe de 10,9 cm **mesurés sur la photo** `mbot1.png`
+   (13 cm de large = 352 pixels, perspective comprise) ; 150 tr/min à 100 % **estimé**. À confirmer à la règle
+   (`ROUE_D`, `ENTRAXE`, `RPM_100` en tête de `simulateur.js`), puis régler la durée du quart de tour de l'exemple « carré » (0,33 s).
 5. **Écart des 2 capteurs** du suiveur de ligne (1,6 cm estimé, `LIGNE_L`).
 
 ## Tests rapides (console du navigateur)

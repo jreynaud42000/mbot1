@@ -5,20 +5,26 @@
 // selon la vitesse de ses deux roues (entrainement differentiel) ; les capteurs lisent la piste : ultrasons par
 // lancer de rayons sur les obstacles et les murs, suiveur de ligne par lecture du sol sous ses 2 capteurs.
 //
-// Dimensions : mBot ≈ 17 × 13 cm (Makeblock), ultrasons 3 a 400 cm (MeUltrasonicSensor).
-// Diametre des roues, entraxe et vitesse des moteurs NON documentes : valeurs estimees, a mesurer sur un vrai robot
-// (ROUE_D, ENTRAXE, RPM_100).
+// Dimensions : mBot ≈ 17 × 13 cm (Makeblock), ultrasons 3 a 400 cm (MeUltrasonicSensor). Le robot est dessine avec
+// la photo vue de dessus mbot1.png ; diametre des roues, entraxe et contour sont mesures sur cette photo (13 cm de
+// large = 352 pixels, perspective comprise : a confirmer a la regle). Vitesse des moteurs NON documentee : estimee (RPM_100).
 
 (function () {
     'use strict';
     const $ = id => document.getElementById(id);
 
     // ---------- Geometrie du robot (cm ; f = vers l'avant depuis l'axe des roues, l = vers la droite) ----------
-    const ROUE_D = 6.4;             // diametre des roues (estime)
-    const ENTRAXE = 11.5;           // distance entre les deux roues (estimee)
+    const ROUE_D = 6.6;             // diametre des roues (mesure sur la photo)
+    const ENTRAXE = 10.9;           // distance entre les milieux des deux roues (mesuree sur la photo)
     const RPM_100 = 150;            // vitesse des roues a 100 % (moteurs 6 V, estimee)
-    const CORPS = { arriere: -6, avant: 11, demiLargeur: 6.5 };
-    const ULTRASONS_F = 10.5;
+    const CORPS = { arriere: -6, avant: 10.2, demiLargeur: 6.5 };
+    const ULTRASONS_F = 9.4;
+    // Photo vue de dessus (avant en haut) : echelle et position de l'axe des roues, en pixels de mbot1.png.
+    const PHOTO = { pxParCm: 27.1, centreX: 175, axeY: 284 };
+    // LED de la carte sur la photo (positions approximatives : les LED sont sous le capot).
+    const LEDS_PHOTO = [[200, 74], [150, 74]];   // LED 1 a droite, LED 2 a gauche
+    const photo = new Image();
+    photo.src = 'mbot1.png';
     const LIGNE_F = 7;
     const LIGNE_L = { gauche: -0.8, droit: 0.8 };   // les 2 capteurs du suiveur de ligne (ecart estime 1,6 cm)
     const TAU_MOTEUR = 0.1;         // temps de reponse des moteurs (s)
@@ -188,24 +194,35 @@
         }
         ctx.save();
         ctx.translate(robot.x, robot.y); ctx.rotate(robot.a);
-        // roues
-        ctx.fillStyle = '#222';
-        ctx.fillRect(-ROUE_D / 2, -CORPS.demiLargeur, ROUE_D, 2.2);
-        ctx.fillRect(-ROUE_D / 2, CORPS.demiLargeur - 2.2, ROUE_D, 2.2);
-        // chassis en aluminium bleu et carte mCore
-        ctx.fillStyle = bloque ? '#c92a2a' : '#2f7fd1';
-        ctx.beginPath(); ctx.roundRect(CORPS.arriere, -CORPS.demiLargeur + 2.4, CORPS.avant - CORPS.arriere - 1.5, 2 * CORPS.demiLargeur - 4.8, 2.5); ctx.fill();
-        ctx.fillStyle = '#1b5e20'; ctx.fillRect(-4.5, -3.6, 8, 7.2);
-        // LED 1 a droite, LED 2 a gauche (a verifier sur le vrai robot)
-        [[1, 1.8], [0, -1.8]].forEach(([i, l]) => {
+        const k = PHOTO.pxParCm;
+        if (photo.complete && photo.naturalWidth) {
+            // Photo (avant en haut) tournee d'un quart de tour : le haut de l'image pointe vers l'avant du robot.
+            ctx.save(); ctx.rotate(Math.PI / 2);
+            ctx.drawImage(photo, -PHOTO.centreX / k, -PHOTO.axeY / k, photo.naturalWidth / k, photo.naturalHeight / k);
+            ctx.restore();
+        } else {   // photo pas encore chargee : silhouette simple
+            ctx.fillStyle = '#222';
+            ctx.fillRect(-ROUE_D / 2, -CORPS.demiLargeur, ROUE_D, 2);
+            ctx.fillRect(-ROUE_D / 2, CORPS.demiLargeur - 2, ROUE_D, 2);
+            ctx.fillStyle = '#2f7fd1';
+            ctx.beginPath(); ctx.roundRect(CORPS.arriere, -CORPS.demiLargeur + 2, CORPS.avant - CORPS.arriere, 2 * CORPS.demiLargeur - 4, 1.5); ctx.fill();
+        }
+        if (bloque) {   // contre un mur ou un obstacle : voile rouge
+            ctx.fillStyle = 'rgba(201, 42, 42, 0.45)';
+            ctx.beginPath(); ctx.roundRect(CORPS.arriere, -CORPS.demiLargeur, CORPS.avant - CORPS.arriere, 2 * CORPS.demiLargeur, 1.5); ctx.fill();
+        }
+        // LED de la carte, allumees par-dessus la photo
+        LEDS_PHOTO.forEach(([px, py], i) => {
             const [r, g, b] = ledsRobot[i];
-            ctx.fillStyle = (r || g || b) ? 'rgb(' + r + ',' + g + ',' + b + ')' : '#555';
-            ctx.beginPath(); ctx.arc(2.6, -l, 0.7, 0, 2 * Math.PI); ctx.fill();
+            if (!(r || g || b)) return;
+            const f = (PHOTO.axeY - py) / k, l = (px - PHOTO.centreX) / k;
+            const halo = ctx.createRadialGradient(f, l, 0, f, l, 1.6);
+            halo.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',1)');
+            halo.addColorStop(0.4, 'rgba(' + r + ',' + g + ',' + b + ',0.8)');
+            halo.addColorStop(1, 'rgba(' + r + ',' + g + ',' + b + ',0)');
+            ctx.fillStyle = halo;
+            ctx.beginPath(); ctx.arc(f, l, 1.6, 0, 2 * Math.PI); ctx.fill();
         });
-        // capteur a ultrasons (deux « yeux »)
-        ctx.fillStyle = '#dee2e6'; ctx.fillRect(CORPS.avant - 2.2, -4, 1.8, 8);
-        ctx.fillStyle = '#1c7ed6';
-        for (const l of [-2, 2]) { ctx.beginPath(); ctx.arc(CORPS.avant - 0.6, l, 1.3, 0, 2 * Math.PI); ctx.fill(); }
         // capteurs de ligne
         for (const [cote, l] of Object.entries(LIGNE_L)) {
             ctx.fillStyle = voirCapteurs && surLigne(cote) ? '#40c057' : '#adb5bd';

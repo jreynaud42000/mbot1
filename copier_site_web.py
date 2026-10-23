@@ -11,7 +11,7 @@ import shutil
 DOSSIER = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(DOSSIER, "site_web")
 FICHIERS = ["index.html", "app.js", "bandeau.js", "blocs.js", "direct.js", "simulateur.js", "televersement.js", "tuto.js",
-            "logo.png", "logo_ts.png"]
+            "logo.png", "logo_ts.png", "mbot1.png"]
 
 os.makedirs(SITE, exist_ok=True)
 for nom in FICHIERS:

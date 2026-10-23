@@ -340,11 +340,11 @@
     const toujours = (contenu) => B('mb_toujours', null, { DO: { block: contenu } });
     const EXEMPLES = {
         vide: { nom: 'mon_programme', piste: null, blocs: depart(B('mb_led_couleur', { LED: '0', COULEUR: '#00ff00' })) },
-        // Pas d'encodeur sur le mBot1 : les virages se reglent par la duree (0,36 s a 50 % ≈ un quart de tour dans le simulateur).
+        // Pas d'encodeur sur le mBot1 : les virages se reglent par la duree (0,33 s a 50 % ≈ un quart de tour dans le simulateur).
         carre: { nom: 'carre', piste: 'libre', blocs: depart(
             B('controls_repeat_ext', null, { TIMES: n(4), DO: { block: chaine(
                 B('mb_avancer_pendant', { SENS: 'forward' }, { V: n(50), T: n(1) }),
-                B('mb_avancer_pendant', { SENS: 'turn_right' }, { V: n(50), T: n(0.36) })) } }),
+                B('mb_avancer_pendant', { SENS: 'turn_right' }, { V: n(50), T: n(0.33) })) } }),
             B('mb_son_note', { NOTE: '523', DUREE: '0.5' })) },
         obstacle: { nom: 'eviter_obstacles', piste: 'obstacles', blocs: depart(
             toujours(B('controls_if', null, {
@@ -502,7 +502,7 @@
         '<p>Glissez le robot ou un obstacle avec la souris ; la molette au-dessus du robot le fait pivoter ; un double-clic retire un obstacle.</p>' +
         '<p>Le bouton de la carte et les touches de la télécommande se maintiennent appuyés avec la souris. Le curseur règle la lumière ambiante.</p>' +
         '<p>Les deux points sous l\'avant du robot sont les capteurs du suiveur de ligne (verts quand ils voient la ligne) ; le trait bleu pointillé est le faisceau des ultrasons.</p>' +
-        '<p class="remarque">Le simulateur est une approximation : roues de 6,4 cm, entraxe de 11,5 cm et vitesse de 150 tr/min à 100 % estimés. ' +
+        '<p class="remarque">Le simulateur est une approximation : roues de 6,6 cm et entraxe de 10,9 cm mesurés sur la photo, vitesse de 150 tr/min à 100 % estimée. ' +
         'Sur le vrai robot, la vitesse dépend aussi des piles : réglez les durées des virages en essayant.</p>'));
 
     // ==========================================
