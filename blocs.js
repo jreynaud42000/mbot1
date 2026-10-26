@@ -102,7 +102,7 @@
           tooltip: 'Tension lue sur une broche d\'un port RJ25 (0 = 0 V, 1023 = 5 V). Seuls les ports 3 et 4 ont des entrées analogiques.' }),
         reporteur({ type: 'mb_port_numerique', message0: 'la broche %2 du port %1 est à l\'état haut ?', args0: [menu('PORT', PORTS), menu('BROCHE', BROCHES)],
           tooltip: 'Vrai si la broche reçoit 5 V (état haut), faux si elle est à 0 V.' }, 'Boolean'),
-        instr({ type: 'mb_port_ecrire', message0: 'mettre la broche %2 du port %1 à l\'état %3', args0: [menu('PORT', PORTS), menu('BROCHE', BROCHES), menu('ETAT', [['haut (5 V)', 'HIGH'], ['bas (0 V)', 'LOW']])],
+        instr({ type: 'mb_port_ecrire', message0: 'mettre la broche %2 du port %1 à l\'état %3', args0: [menu('PORT', PORTS), menu('BROCHE', BROCHES), menu('ETAT', [['5 V (haut)', 'HIGH'], ['0 V (bas)', 'LOW']])],   // aucun mot commun : Blockly sortirait « V) » du menu
           tooltip: 'Envoie 5 V (haut) ou 0 V (bas) sur une broche d\'un port RJ25, par exemple pour un module LED.' }),
 
         // ----- Ordinateur -----
