@@ -474,9 +474,19 @@
             const aide = typeof b.tooltip === 'function' ? b.tooltip() : b.tooltip;
             let cpp = '';
             try {
-                Arduino.init(ws);
-                const r = Arduino.blockToCode(b, true);
-                cpp = (Array.isArray(r) ? r[0] : r) || '';
+                // Un bloc grise (hors du programme) ne produit aucun code : il est reactive le temps de la
+                // generation, sans evenement (ni annulation, ni sauvegarde, ni regrisage pendant ce temps).
+                const grise = !b.isEnabled();
+                Blockly.Events.disable();
+                try {
+                    if (grise) b.setEnabled(true);
+                    Arduino.init(ws);
+                    const r = Arduino.blockToCode(b, true);
+                    cpp = (Array.isArray(r) ? r[0] : r) || '';
+                } finally {
+                    if (grise) b.setEnabled(false);
+                    Blockly.Events.enable();
+                }
                 if (b.type.startsWith('procedures_def')) cpp = Object.entries(Arduino.definitions_).filter(([k]) => k.startsWith('f_')).map(([, d]) => d)[0] || '';
             } catch (e) { cpp = ''; }
             if (CHAPEAUX.includes(b.type)) cpp = 'void setup() {\n  // les blocs placés dessous\n}';
