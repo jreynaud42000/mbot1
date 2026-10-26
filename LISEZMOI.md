@@ -28,6 +28,7 @@ Makeblock). Il y a trois façons d'exécuter un programme :
 |---|---|
 | `index.html` | page, styles (thèmes repris des éditeurs micro:bit), bandeau, panneaux, fenêtres |
 | `blocs.js` | blocs mBot1, générateur C++ Arduino (MeMCore), générateur « SIMU » pour le simulateur et le mode direct |
+| `exemples_aide.js` | un exemple par bloc (41 exemples, 55 blocs) pour « Aide sur ce bloc » : dessiné en blocs, code C++, bouton « Insérer l'exemple » (repris du mBot2) |
 | `app.js` | espace Blockly, boîte à outils et couleurs, thèmes Blockly, code C++, fichiers `.ino`, exemples, aide, console |
 | `simulateur.js` | robot 2D sur piste à l'échelle (200 × 150 cm), ultrasons, suiveur de ligne, LED, buzzer, bouton, télécommande |
 | `direct.js` | mode direct : même code que le simulateur, commandes envoyées au robot (protocole série Makeblock FF 55) |

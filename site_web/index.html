@@ -379,6 +379,16 @@
     /* Aide sur un bloc (menu contextuel) */
     #aide-bloc .contenu p { margin: 0 0 8px; }
     #aide-bloc code { font-family: Consolas, monospace; background: var(--fond-saisie); padding: 1px 4px; border-radius: 3px; }
+    #aide-bloc .fenetre { width: 640px; }
+    #aide-exemple { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--ec-sep); }
+    #aide-exemple[hidden] { display: none; }
+    #aide-exemple h4 { margin: 0 0 4px; font-size: 14px; }
+    #aide-exemple p { margin: 0 0 8px; }
+    #aide-exemple-blocs { height: 240px; border: 1px solid var(--bordure-chrome); border-radius: 6px; overflow: hidden; }
+    #aide-exemple details { margin-top: 8px; }
+    #aide-exemple summary { cursor: pointer; color: var(--ec-doux); font-size: 12.5px; }
+    #aide-exemple pre { margin: 6px 0 0; max-height: 180px; overflow: auto; }
+    #aide-inserer[hidden] { display: none; }
 
     /* Visite guidee (tuto.js) */
     #tuto-voile { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 9000; pointer-events: none; }
@@ -573,14 +583,27 @@
   <div class="voile" id="aide-bloc" role="dialog" aria-modal="true" aria-labelledby="aide-titre">
     <div class="fenetre">
       <header id="aide-titre">Aide</header>
-      <div class="contenu" id="aide-contenu"></div>
-      <footer><button class="btn-principal" id="aide-fermer">Fermer</button></footer>
+      <div class="contenu">
+        <div id="aide-contenu"></div>
+        <!-- Exemple du bloc (exemples_aide.js) : programme en blocs, en lecture seule, et son code C++ -->
+        <div id="aide-exemple" hidden>
+          <h4 id="aide-exemple-titre"></h4>
+          <p id="aide-exemple-desc"></p>
+          <div id="aide-exemple-blocs"></div>
+          <details id="aide-exemple-details"><summary>Voir le code C++ de l'exemple</summary><pre><code id="aide-exemple-code"></code></pre></details>
+        </div>
+      </div>
+      <footer>
+        <button class="btn-secondaire" id="aide-inserer" hidden title="Ajouter ce programme d'exemple à votre programme">Insérer l'exemple</button>
+        <button class="btn-principal" id="aide-fermer">Fermer</button>
+      </footer>
     </div>
   </div>
 
   <input type="file" id="fichier-entree" accept=".ino,text/plain" hidden>
 
   <script src="blocs.js"></script>
+  <script src="exemples_aide.js"></script>
   <script src="simulateur.js"></script>
   <script src="televersement.js"></script>
   <script src="direct.js"></script>

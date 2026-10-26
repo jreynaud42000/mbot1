@@ -469,9 +469,11 @@
     G['controls_for'] = b => {
         const x = 'V[' + nomVar(b) + ']', k = ++compteur;
         // Comme en C++ (genererArduino) : bornes comprises, pas toujours positif, sens donne par les bornes.
-        return 'for (let _de' + k + ' = Number(' + sv(b, 'FROM') + '), _a' + k + ' = Number(' + sv(b, 'TO') + '), _p' + k + ' = Math.abs(Number(' + sv(b, 'BY', '1') + ')) || 1, ' +
-            '_s' + k + ' = _de' + k + ' <= _a' + k + ' ? 1 : -1, ' + x + ' = _de' + k + '; _s' + k + ' > 0 ? ' + x + ' <= _a' + k + ' : ' + x + ' >= _a' + k + '; ' +
-            x + ' += _s' + k + ' * _p' + k + ') {\n' + st(b, 'DO') + S.INDENT + 'await R.pas();\n}\n';
+        // Bornes calculees une fois, avant la boucle (la variable V[...] ne peut pas etre declaree par « let »).
+        return '{\nconst _de' + k + ' = Number(' + sv(b, 'FROM') + '), _a' + k + ' = Number(' + sv(b, 'TO') + '), _p' + k + ' = Math.abs(Number(' + sv(b, 'BY', '1') + ')) || 1, ' +
+            '_s' + k + ' = _de' + k + ' <= _a' + k + ' ? 1 : -1;\n' +
+            'for (' + x + ' = _de' + k + '; _s' + k + ' > 0 ? ' + x + ' <= _a' + k + ' : ' + x + ' >= _a' + k + '; ' +
+            x + ' += _s' + k + ' * _p' + k + ') {\n' + st(b, 'DO') + S.INDENT + 'await R.pas();\n}\n}\n';
     };
     G['controls_flow_statements'] = b => (b.getFieldValue('FLOW') === 'BREAK' ? 'break' : 'continue') + ';\n';
 

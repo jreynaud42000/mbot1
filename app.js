@@ -456,14 +456,131 @@
     // ==========================================
     // 9. AIDE
     // ==========================================
-    function ouvrirAide(titre, html) {
+    let exempleAffiche = null;
+    function ouvrirAide(titre, html, exemple) {
         $('aide-titre').textContent = titre;
         $('aide-contenu').innerHTML = html;
+        exempleAffiche = exemple || null;
+        $('aide-exemple').hidden = !exemple;
+        $('aide-inserer').hidden = !exemple;
+        if (exemple) {
+            $('aide-exemple-titre').textContent = 'Exemple : ' + exemple.titre;
+            $('aide-exemple-desc').textContent = exemple.texte;
+            $('aide-exemple-code').textContent = codeExemple(exemple);
+            $('aide-exemple-details').open = false;
+        }
         $('aide-bloc').classList.add('ouvert');
+        if (exemple) afficherExempleEnBlocs(exemple);   // apres l'ouverture : Blockly mesure son conteneur, qui doit etre visible
         $('aide-fermer').focus();
     }
-    $('aide-fermer').addEventListener('click', () => $('aide-bloc').classList.remove('ouvert'));
-    $('aide-bloc').addEventListener('keydown', e => { if (e.key === 'Escape') $('aide-bloc').classList.remove('ouvert'); });
+    const fermerAide = () => $('aide-bloc').classList.remove('ouvert');
+    $('aide-fermer').addEventListener('click', fermerAide);
+    $('aide-bloc').addEventListener('keydown', e => { if (e.key === 'Escape') fermerAide(); });
+    $('aide-bloc').addEventListener('mousedown', e => { if (e.target === $('aide-bloc')) fermerAide(); });
+    $('aide-inserer').addEventListener('click', () => { if (exempleAffiche) { insererExemple(exempleAffiche); fermerAide(); } });
+
+    // Exemple d'un bloc (exemples_aide.js), repris de l'editeur mBot2 : petit espace Blockly en lecture seule,
+    // cree une fois puis reutilise, au theme de l'editeur.
+    const piles = ex => JSON.parse(JSON.stringify(ex.blocs)).map((b, i) => Object.assign(b, { x: 0, y: i * 1000 }));
+    let espaceExemple = null;
+    function afficherExempleEnBlocs(ex) {
+        const conteneur = $('aide-exemple-blocs');
+        try {
+            if (!espaceExemple) {
+                espaceExemple = Blockly.inject(conteneur, {
+                    media: 'lib/blockly/media/', theme: themeCourant(),
+                    readOnly: true, sounds: false, trashcan: false,
+                    zoom: { controls: false, wheel: false, pinch: false, startScale: 1 },
+                    move: { scrollbars: true, drag: true, wheel: false },
+                });
+                // inject() fait de ce petit espace l'espace « principal » de Blockly (copier-coller, annulation) :
+                // ce role revient au vrai programme.
+                Blockly.common.setMainWorkspace(ws);
+                new MutationObserver(() => espaceExemple.setTheme(themeCourant()))
+                    .observe(racine, { attributes: true, attributeFilter: ['data-theme', 'data-contrast', 'data-saison'] });
+            }
+            espaceExemple.clear();
+            espaceExemple.setScale(1);
+            Blockly.svgResize(espaceExemple);
+            Blockly.serialization.workspaces.load({ blocks: { languageVersion: 0, blocks: piles(ex) } }, espaceExemple);
+            let y = 0;   // piles rangees les unes sous les autres
+            for (const b of espaceExemple.getTopBlocks(true)) {
+                const pos = b.getRelativeToSurfaceXY();
+                b.moveBy(-pos.x, y - pos.y);
+                y += b.getHeightWidth().height + 24;
+            }
+            // Echelle reduite si le programme depasse la zone, pour le voir en entier.
+            const zone = espaceExemple.getBlocksBoundingBox();
+            const echelle = Math.max(0.4, Math.min(1, (conteneur.clientWidth - 24) / (zone.right - zone.left),
+                                                      (conteneur.clientHeight - 24) / (zone.bottom - zone.top)));
+            espaceExemple.setScale(echelle);
+            espaceExemple.scroll(12 - zone.left * echelle, 12 - zone.top * echelle);
+        } catch (e) {
+            console.error('Exemple en blocs :', e);
+        }
+    }
+    /** Code C++ de l'exemple, calcule dans un espace temporaire (le programme en cours n'est pas touche). */
+    function codeExemple(ex) {
+        const espace = new Blockly.Workspace();
+        try {
+            Blockly.serialization.workspaces.load({ blocks: { languageVersion: 0, blocks: piles(ex) } }, espace);
+            return genererArduino(espace).trim();
+        } catch (e) {
+            console.error('Code de l\'exemple :', e);
+            return '';
+        } finally {
+            espace.dispose();
+            majCode();   // le generateur C++ est partage : on le remet sur le vrai programme
+        }
+    }
+    /**
+     * Ajoute l'exemple sous les blocs existants, en un seul pas d'annulation (Ctrl+Z). « quand le programme démarre »
+     * est unique : si le programme en a deja un, les blocs de l'exemple s'ajoutent a la fin du sien.
+     */
+    function insererExemple(ex) {
+        let x = 40, y = 40;
+        const existants = ws.getTopBlocks(false);
+        if (existants.length) {
+            const zones = existants.map(b => b.getBoundingRectangle());
+            x = Math.min(...zones.map(r => r.left));
+            y = Math.max(...zones.map(r => r.bottom)) + 60;
+        }
+        let premier = null, nonAccroche = false;
+        Blockly.Events.setGroup(true);
+        try {
+            for (const def of piles(ex)) {
+                const demarrage = def.type === 'mb_demarrage' && ws.getBlocksByType('mb_demarrage', false)[0];
+                if (demarrage) {
+                    if (!def.next) continue;
+                    let dernier = demarrage;
+                    while (dernier.getNextBlock()) dernier = dernier.getNextBlock();
+                    const b = Blockly.serialization.blocks.append(def.next.block, ws, { recordUndo: true });
+                    if (dernier.nextConnection && b.previousConnection) dernier.nextConnection.connect(b.previousConnection);
+                    else {   // « répéter indéfiniment » termine deja la pile : rien ne peut s'accrocher dessous
+                        const pos = b.getRelativeToSurfaceXY();
+                        b.moveBy(x - pos.x, y - pos.y); y = b.getBoundingRectangle().bottom + 40;
+                        nonAccroche = true;
+                    }
+                    premier = premier || b;
+                    continue;
+                }
+                const b = Blockly.serialization.blocks.append(def, ws, { recordUndo: true });
+                const pos = b.getRelativeToSurfaceXY();
+                b.moveBy(x - pos.x, y - pos.y);
+                y = b.getBoundingRectangle().bottom + 40;
+                premier = premier || b;
+            }
+        } finally {
+            Blockly.Events.setGroup(false);
+        }
+        griserOrphelins();
+        if (nonAccroche) window.consoleAjouterLigne('Exemple ajouté à part (grisé) : votre « quand le programme démarre » se termine par « répéter indéfiniment ». ' +
+            'Déplacez les blocs de l\'exemple là où vous les voulez.', 'info');
+        if (premier) {
+            try { ws.centerOnBlock(premier.id); } catch (e) { /* le centrage n'est qu'un confort */ }
+            premier.select();
+        }
+    }
     const echapper = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
     Blockly.ContextMenuRegistry.registry.register({
         id: 'aide_bloc_mbot1', scopeType: Blockly.ContextMenuRegistry.ScopeType.BLOCK, weight: -1,
@@ -490,9 +607,11 @@
                 if (b.type.startsWith('procedures_def')) cpp = Object.entries(Arduino.definitions_).filter(([k]) => k.startsWith('f_')).map(([, d]) => d)[0] || '';
             } catch (e) { cpp = ''; }
             if (CHAPEAUX.includes(b.type)) cpp = 'void setup() {\n  // les blocs placés dessous\n}';
+            majCode();   // le generateur C++ est partage : on le remet sur le vrai programme
             ouvrirAide('Aide : « ' + b.toString(60, '…') + ' »',
                 '<p>' + echapper(aide || 'Pas d\'aide pour ce bloc.') + '</p>' +
-                (cpp.trim() ? '<p>En C++ (Arduino, bibliothèque MeMCore) :</p><pre><code>' + echapper(cpp.trim()) + '</code></pre>' : ''));
+                (cpp.trim() ? '<p>En C++ (Arduino, bibliothèque MeMCore) :</p><pre><code>' + echapper(cpp.trim()) + '</code></pre>' : ''),
+                (window.EXEMPLES_AIDE_MBOT1 || {})[b.type]);
         },
     });
     $('aide-envoi').addEventListener('click', () => ouvrirAide('Brancher et programmer le mBot1',
