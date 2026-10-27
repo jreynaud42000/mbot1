@@ -433,6 +433,42 @@
         bouton.addEventListener('click', () => appliquer(panneau.classList.contains('replie')));
     }
     basculer('btn-vue-simu', 'simulator-container', 'mbot1_vue_simu');
+
+    // Separateur glissant (comme les simulateurs micro:bit et mBot2) : la simulation prend une largeur fixe en pixels,
+    // memorisee ; la zone de blocs garde toujours au moins 260 px. La piste et la carte suivent la largeur du panneau.
+    (function separateurSimulation() {
+        const poignee = $('simulateur-redimensionneur'), panneau = $('simulator-container');
+        const CLE = 'mbot1_largeur_simu';
+        const borner = (l) => {
+            const autres = ($('code-container').classList.contains('replie') ? 0 : $('code-container').getBoundingClientRect().width) + poignee.offsetWidth;
+            return Math.max(250, Math.min($('main-container').clientWidth - 260 - autres, l));
+        };
+        const fixer = (l) => { panneau.style.width = Math.round(borner(l)) + 'px'; Blockly.svgResize(ws); };
+        try { const l = parseFloat(localStorage.getItem(CLE)); if (l > 0) fixer(l); } catch (e) { /* navigation privee */ }
+        let depart = null;
+        poignee.addEventListener('pointerdown', (e) => {
+            depart = { x: e.clientX, largeur: panneau.getBoundingClientRect().width };
+            poignee.setPointerCapture(e.pointerId);
+            poignee.classList.add('actif');
+            document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+        poignee.addEventListener('pointermove', (e) => { if (depart) fixer(depart.largeur - (e.clientX - depart.x)); });   // vers la gauche = plus large
+        const lacher = () => {
+            if (!depart) return;
+            depart = null;
+            poignee.classList.remove('actif');
+            document.body.style.cursor = ''; document.body.style.userSelect = '';
+            try { localStorage.setItem(CLE, String(parseFloat(panneau.style.width))); } catch (e) { /* navigation privee */ }
+        };
+        poignee.addEventListener('pointerup', lacher);
+        poignee.addEventListener('pointercancel', lacher);
+        poignee.addEventListener('dblclick', () => {   // double-clic : largeur d'origine
+            panneau.style.width = ''; Blockly.svgResize(ws);
+            try { localStorage.removeItem(CLE); } catch (e) { /* navigation privee */ }
+        });
+        window.addEventListener('resize', () => { if (panneau.style.width) fixer(parseFloat(panneau.style.width)); });
+    })();
     basculer('btn-vue-code', 'code-container', 'mbot1_vue_code');
     basculer('btn-vue-console', 'console-panneau', 'mbot1_vue_console');
 

@@ -260,7 +260,13 @@
     #blocklyDiv { position: absolute; inset: 0; }
     .panneau { flex: 0 0 auto; display: flex; flex-direction: column; min-height: 0; overflow: auto; box-sizing: border-box; }
     .panneau.replie { display: none !important; }
-    #simulator-container { width: clamp(300px, 32vw, 470px); background: var(--ec-sim); border-left: var(--ec-bord-w) solid var(--ec-bord); padding: 10px; gap: 10px; }
+    #simulator-container { width: clamp(300px, 32vw, 470px); background: var(--ec-sim); padding: 10px; gap: 10px; }
+    /* Separateur entre les blocs et la simulation (app.js) : le glisser elargit ou reduit la simulation, comme dans l'editeur micro:bit. */
+    #simulateur-redimensionneur { flex: 0 0 6px; cursor: col-resize; background: var(--ec-sep); touch-action: none; }
+    #simulateur-redimensionneur:hover, #simulateur-redimensionneur.actif { background: #cf4400; }
+    #simulateur-redimensionneur:has(+ .replie) { display: none; }
+    #reglages-piste { display: grid; grid-template-columns: 1fr; gap: 2px 10px; margin-top: 6px; font-size: 12px; }
+    #reglages-piste input[type="range"] { width: 100%; max-width: 220px; margin: 0 0 6px; accent-color: var(--accent); }
     #code-container { width: clamp(260px, 25vw, 400px); background: var(--ec-code); border-left: var(--ec-bord-w) solid var(--ec-code-bord); padding: 8px 10px; }
     .titre-panneau { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: var(--ec-pan-txt); margin-bottom: 6px; }
     .titre-panneau .espace { flex: 1; }
@@ -482,6 +488,7 @@
     <div id="main-container">
       <div id="blockly-wrapper"><div id="blocklyDiv"></div></div>
 
+      <div id="simulateur-redimensionneur" title="Glisser vers la gauche ou la droite pour élargir ou réduire la simulation (double-clic : largeur d’origine)"></div>
       <div id="simulator-container" class="panneau">
         <div class="bloc-sim">
           <div class="ligne-outils">
@@ -493,6 +500,13 @@
           </div>
           <canvas id="piste" width="800" height="600" aria-label="Piste du simulateur, vue de dessus"></canvas>
           <div class="aide-piste">Glissez le robot ou un obstacle pour le déplacer ; molette sur le robot pour le faire pivoter ; double-clic sur un obstacle pour le retirer.</div>
+          <!-- Memes reglages que les simulateurs micro:bit et mBot2 (simulateur.js) -->
+          <div id="reglages-piste">
+            <label for="largeur-piste">Largeur de la piste (cm) : <b id="largeur-piste-val">2,5</b></label>
+            <input type="range" id="largeur-piste" min="1" max="5" step="0.5" value="2.5" title="Épaisseur de la ligne noire : plus elle est fine, plus le suivi de ligne est exigeant">
+            <label for="echelle-robot">Échelle du robot : <b id="echelle-robot-val">×1</b></label>
+            <input type="range" id="echelle-robot" min="1" max="4" step="0.5" value="1" title="Agrandit le dessin du robot (sa position, ses capteurs et ses collisions ne changent pas)">
+          </div>
           <div id="mesures">
             <div><span>Distance</span><b id="m-distance">—</b></div>
             <div><span>Ligne gauche droite</span><b id="m-ligne">—</b></div>
