@@ -184,8 +184,8 @@
         flyoutBackgroundColour: '#ffffff', flyoutForegroundColour: '#000000', flyoutOpacity: 1, scrollbarColour: '#000000',
         insertionMarkerColour: '#000000', insertionMarkerOpacity: 0.3, cursorColour: '#000000' });
     const THEME_CLAIR = theme('clairMbot1', Blockly.Themes.Classic, {
-        workspaceBackgroundColour: '#ffffff', toolboxBackgroundColour: '#2e2e2e', toolboxForegroundColour: '#dddddd',
-        flyoutBackgroundColour: '#d9d9d9', flyoutForegroundColour: '#555555', flyoutOpacity: 1 });
+        workspaceBackgroundColour: '#f2f2ef', toolboxBackgroundColour: '#2e2e2e', toolboxForegroundColour: '#dddddd',   // gris doux plutot que blanc
+        flyoutBackgroundColour: '#dcdcd7', flyoutForegroundColour: '#555555', flyoutOpacity: 1 });
     const THEMES_SAISON = {
         halloween: theme('halloweenMbot1', THEME_SOMBRE, { workspaceBackgroundColour: '#141414', toolboxBackgroundColour: '#0f0d12', flyoutBackgroundColour: '#1f1a24', scrollbarColour: '#6b4a80' }),
         noel: theme('noelMbot1', THEME_SOMBRE, { workspaceBackgroundColour: '#0d1b2a', toolboxBackgroundColour: '#08131f', flyoutBackgroundColour: '#13263a', scrollbarColour: '#4a6a8a' }),
@@ -195,7 +195,8 @@
     function themeCourant() {
         const clair = racine.dataset.theme === 'light', eleve = racine.dataset.contrast === 'high';
         if (clair) return eleve ? THEME_CLAIR_ELEVE : THEME_CLAIR;
-        return eleve ? THEME_SOMBRE_ELEVE : (THEMES_SAISON[racine.dataset.saison] || THEME_SOMBRE);
+        // Sombre sans theme de saison : charte Educatech (comme l'editeur micro:bit, 31 oct. 2026), comme le salon.
+        return eleve ? THEME_SOMBRE_ELEVE : (THEMES_SAISON[racine.dataset.saison || 'salon'] || THEME_SOMBRE);
     }
 
     // ==========================================

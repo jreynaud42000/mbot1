@@ -42,6 +42,7 @@ def dossier_de_lapplication():
 DOSSIER = dossier_de_lapplication()
 OUTILS = os.path.join(DOSSIER, "outils")
 CONFIG = os.path.join(OUTILS, "arduino-cli.yaml")
+CONSTRUCTION = os.path.join(os.environ.get("LOCALAPPDATA") or tempfile.gettempdir(), "EasyblocMbot1", "construction")
 verrou_compilation = threading.Lock()   # une compilation a la fois (meme dossier de construction)
 
 
@@ -77,7 +78,9 @@ def compiler(code=None, croquis=None):
                 f.write(code)
         sortie = os.path.join(temporaire, "sortie")
         nom = os.path.splitext(os.path.basename(croquis))[0]
-        construction = os.path.join(OUTILS, "construction", nom)   # garde le noyau compile : compilations suivantes rapides
+        # Dossier de construction garde (noyau deja compile : compilations suivantes rapides), HORS de OneDrive :
+        # dans un dossier synchronise, arduino-cli s'arrete sans rien produire ni message (constate le 31 oct. 2026).
+        construction = os.path.join(CONSTRUCTION, nom)
         commande = [cli, "compile", "--fqbn", CARTE, "--build-path", construction, "--output-dir", sortie, os.path.dirname(croquis)]
         if os.path.isfile(CONFIG):
             commande[1:1] = ["--config-file", CONFIG]
@@ -92,6 +95,8 @@ def compiler(code=None, croquis=None):
             # Seules les lignes d'erreur interessent l'eleve (le chemin du dossier temporaire est retire).
             erreurs = [l.replace(temporaire, "").replace(os.sep + "programme" + os.sep, "") for l in journal.splitlines()
                        if "error" in l.lower() or "erreur" in l.lower()]
+            if fini.returncode == 0 and not journal:
+                return {"ok": False, "message": "le compilateur n'a produit aucun fichier (dossier de construction : %s)" % construction}
             return {"ok": False, "message": "erreur de compilation", "journal": "\n".join(erreurs[:15]) or journal[-2000:]}
         with open(hexa, encoding="ascii") as f:
             return {"ok": True, "hex": f.read(), "journal": journal[-2000:]}

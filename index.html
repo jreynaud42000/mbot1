@@ -60,6 +60,12 @@
       --ec-sim: #f7f7f7; --ec-bord: #aaa; --ec-code: #ffffff; --ec-code-bord: #c8c8c8; --ec-sep: #ccc;
       --ec-pan: #ffffff; --ec-pan-bord: #c8c8c8; --ec-pan-txt: #24292e; --ec-doux: #5c6168;
     }
+    /* Clair, contraste normal : fonds gris doux plutot que blancs et bandeau Educatech, le meme qu'en sombre
+       (comme l'editeur micro:bit, 31 oct. 2026). Le fond de la zone de blocs est dans le theme Blockly (app.js). */
+    :root[data-theme="light"]:not([data-contrast="high"]) {
+      --ec-page: #e4e4e0; --ec-sim: #ececea; --fond-chrome: #e7e7e3;
+      --ec-grille: #d6d6d1; --ec-flyout: #dcdcd7; --bordure-chrome: #c6c6c0;
+    }
     :root[data-contrast="high"] {
       --fond-chrome: #000; --texte-chrome: #fff;
       --fond-saisie: #000; --texte-saisie: #fff; --bordure-chrome: #fff;
@@ -105,7 +111,9 @@
       --ec-sim: #0d1b2a; --ec-bord: #22405f; --ec-code: #0b1826; --ec-code-bord: #22405f;
       --ec-pan: #13263a; --ec-pan-bord: #22405f; --ec-sep: #22405f;
     }
-    :root[data-saison="salon"]:not([data-theme="light"]):not([data-contrast="high"]) {
+    /* Charte Educatech : theme sombre par defaut (demande de l'utilisateur, 31 oct. 2026, comme l'editeur micro:bit),
+       et theme du salon. */
+    :root:is([data-saison="salon"], :not([data-saison])):not([data-theme="light"]):not([data-contrast="high"]) {
       --bandeau-sombre: #4b3a9e; --accent-fonce: #e0218a;
       --fond-saisie: #0c1030; --texte-saisie: #e6e9ff; --fond-code: #0f1438; --bordure-chrome: #2f3a7a;
       --ec-page: #0c1030; --ec-cat-hover: #222a63; --ec-cat-sel: #2c3577; --ec-cat-lisere: #2bb3a0;
@@ -119,7 +127,8 @@
       background: var(--ec-page); color: var(--ec-pan-txt); }
     button, input, select, textarea { font-family: inherit; }
 
-    /* ═══ BANDEAU DU HAUT (charte Technologie Services : orange #ff5501, plus profond en sombre, noir en contraste eleve) ═══ */
+    /* ═══ BANDEAU DU HAUT (charte Educatech : degrade vert d'eau -> violet et filet magenta, en sombre comme en clair ;
+       noir en contraste eleve ; couleurs propres aux themes Halloween et Noel) ═══ */
     #toolbar {
       min-height: var(--top-h); box-sizing: border-box; position: relative;
       background: var(--bandeau); color: #fff; border-bottom: 3px solid var(--couleur-bandeau);
@@ -129,7 +138,10 @@
     }
     :root:not([data-theme="light"]) #toolbar { background: var(--bandeau-sombre); }
     :root[data-contrast="high"] #toolbar { background: #000; border-bottom: 2px solid var(--bordure-chrome); }
-    :root[data-saison="salon"]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar { background: linear-gradient(90deg, #1f9e8f, #6a2c91); }
+    :root[data-theme="light"]:not([data-contrast="high"]) #toolbar {
+      background: linear-gradient(90deg, #1f9e8f, #6a2c91); border-bottom-color: #e0218a; }
+    :root:is([data-saison="salon"], :not([data-saison])):not([data-theme="light"]):not([data-contrast="high"]) #toolbar {
+      background: linear-gradient(90deg, #1f9e8f, #6a2c91); border-bottom-color: #e0218a; }
     :root[data-saison]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar { border-bottom-color: var(--accent-fonce); }
     :root[data-saison="halloween"]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar {
       border-bottom: 4px solid #ff7a1a;
@@ -145,8 +157,10 @@
     .tb-btn:disabled, .tb-btn:disabled:hover { opacity: 0.45; cursor: not-allowed; background: transparent; }
     .tb-btn.vue:not(.inactif) { box-shadow: inset 0 -3px 0 #fff; border-radius: 4px 4px 0 0; }
     .tb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.25); margin: 0 2px; }
-    #tb-logo { display: flex; align-items: center; padding: 3px 6px; margin-right: 2px; flex-shrink: 0;
-      background: #fff; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+    /* Logo directement sur le bandeau, sans pastille blanche, dans ses couleurs d'origine (choix de l'utilisateur). */
+    #tb-logo { display: flex; align-items: center; padding: 3px 6px; margin-right: 2px; flex-shrink: 0; }
+    /* Contraste eleve : bandeau noir, le texte noir du logo y disparaitrait ; la pastille blanche reste dans ce mode seul. */
+    :root[data-contrast="high"] #tb-logo { background: #fff; border-radius: 5px; }
     #tb-logo img { height: 24px; width: auto; display: block; }
     #tb-titre { font-weight: 700; font-size: 14px; margin: 0 6px 0 2px; white-space: nowrap; }
     #tb-nomfichier { max-width: 240px; background: #fff; color: var(--couleur-bandeau); font-weight: 700;

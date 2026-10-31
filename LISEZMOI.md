@@ -78,7 +78,8 @@ void setup() {
 ## Envoi au robot (téléversement)
 
 1. `app.py` écrit le code dans un croquis temporaire et lance
-   `arduino-cli compile --fqbn arduino:avr:uno` (dossier de construction gardé dans `outils/construction` :
+   `arduino-cli compile --fqbn arduino:avr:uno` (dossier de construction gardé dans `%LOCALAPPDATA%\EasyblocMbot1\construction`, hors de OneDrive : dans un dossier
+   synchronisé, arduino-cli s'arrêtait sans rien produire ni message ;
    environ 8 s par compilation). Les erreurs du compilateur s'affichent dans la console.
    Vérifié : les 6 exemples (4 à 7 Ko) et le microprogramme du mode direct (27 Ko sur 31,5 Ko) compilent.
    La bibliothèque téléchargée (branche master de Makeblock-Libraries, version 3.31.0) compile `src/MeMegaPi.cpp`
