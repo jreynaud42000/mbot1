@@ -1,8 +1,8 @@
 # Éditeur mBot1 (Technologie Services)
 
 Éditeur de programmation par blocs, en français, pour le robot **mBot (v1) de Makeblock** (carte mCore, ATmega328P
-compatible Arduino Uno). Même ergonomie que les éditeurs micro:bit (`blockly_ts_mode_classe`) et mBot2
-(`blocky_ts_mbot2`) : bandeau orange, thèmes clair / sombre / contraste élevé / saisons, blocs de la couleur de la puce
+compatible Arduino Uno). Même ergonomie que les éditeurs micro:bit (`easybloc_ts_mode_classe`) et mBot2
+(`easybloc_ts_mbot2`) : bandeau orange, thèmes clair / sombre / contraste élevé / saisons, blocs de la couleur de la puce
 de leur catégorie, titres de groupe avec trait de séparation, console, visite guidée.
 
 La carte mCore ne fait pas tourner Python : les blocs sont traduits en **C++ Arduino** (bibliothèque MeMCore de
@@ -34,8 +34,8 @@ Makeblock). Il y a trois façons d'exécuter un programme :
 | `direct.js` | mode direct : même code que le simulateur, commandes envoyées au robot (protocole série Makeblock FF 55) |
 | `televersement.js` | lecture du `.hex`, téléversement STK500 (Optiboot) par Web Serial, console du robot |
 | `mbot1.png` | photo du mBot1 vue de dessus, détourée (fond transparent) : robot du simulateur et panneau de la carte |
-| `bandeau.js` | thème, contraste, saisons et décors, puces, recherche de blocs (repris de `blocky_ts_mbot2`) |
-| `tuto.js` | visite guidée (moteur repris de `blockly_ts_mode_classe`, étapes mBot1) |
+| `bandeau.js` | thème, contraste, saisons et décors, puces, recherche de blocs (repris de `easybloc_ts_mbot2`) |
+| `tuto.js` | visite guidée (moteur repris de `easybloc_ts_mode_classe`, étapes mBot1) |
 | `app.py`, `lancer_projet.bat` | serveur local sans cache ; compile les programmes (`POST /compiler`, `POST /microprogramme`) |
 | `installer_outils.py`, `.bat` | installation des outils de compilation dans `outils/` |
 | `copier_site_web.py` | recopie la page dans `site_web/` et vérifie que les copies sont identiques |
