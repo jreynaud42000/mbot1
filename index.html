@@ -129,6 +129,8 @@
 
     /* ═══ BANDEAU DU HAUT (charte Educatech : degrade vert d'eau -> violet et filet magenta, en sombre comme en clair ;
        noir en contraste eleve ; couleurs propres aux themes Halloween et Noel) ═══ */
+    /* Vert d'eau assombri (#147d71 au lieu de #1f9e8f, choix de l'utilisateur, 1er nov. 2026) : texte blanc a 5,0:1
+       au lieu de 3,3:1 (minimum WCAG 4,5:1) ; cote violet inchange (8,8:1). */
     #toolbar {
       min-height: var(--top-h); box-sizing: border-box; position: relative;
       background: var(--bandeau); color: #fff; border-bottom: 3px solid var(--couleur-bandeau);
@@ -139,9 +141,9 @@
     :root:not([data-theme="light"]) #toolbar { background: var(--bandeau-sombre); }
     :root[data-contrast="high"] #toolbar { background: #000; border-bottom: 2px solid var(--bordure-chrome); }
     :root[data-theme="light"]:not([data-contrast="high"]) #toolbar {
-      background: linear-gradient(90deg, #1f9e8f, #6a2c91); border-bottom-color: #e0218a; }
+      background: linear-gradient(90deg, #147d71, #6a2c91); border-bottom-color: #e0218a; }
     :root:is([data-saison="salon"], :not([data-saison])):not([data-theme="light"]):not([data-contrast="high"]) #toolbar {
-      background: linear-gradient(90deg, #1f9e8f, #6a2c91); border-bottom-color: #e0218a; }
+      background: linear-gradient(90deg, #147d71, #6a2c91); border-bottom-color: #e0218a; }
     :root[data-saison]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar { border-bottom-color: var(--accent-fonce); }
     :root[data-saison="halloween"]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar {
       border-bottom: 4px solid #ff7a1a;
