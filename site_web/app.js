@@ -202,6 +202,10 @@
     // ==========================================
     // 4. ESPACE DE TRAVAIL
     // ==========================================
+    // Tiroir de blocs (colonne des categories) : taille fixe, quel que soit le zoom de la zone de programmation
+    // (demande de l'utilisateur, nov. 2026). Par defaut, Blockly lui donne l'echelle de l'espace de travail.
+    Blockly.Flyout.prototype.getFlyoutScale = function () { return 1; };
+
     const ws = Blockly.inject('blocklyDiv', {
         media: 'lib/blockly/media/',
         toolbox: appliquerPalette(TOOLBOX),
