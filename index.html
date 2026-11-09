@@ -203,6 +203,21 @@
     #btn-envoyer { background: #1c7ed6; color: #fff; padding: 6px 11px; font-size: 14px; font-weight: 700; }
     #btn-envoyer:hover { background: #1864ab; }
     :root[data-contrast="high"] #btn-envoyer { background: #fff; color: #000; border: 2px solid #fff; }
+    /* Envoi en un clic (televersement.js) : le bouton se remplit de gauche a droite pendant la compilation et l'ecriture
+       dans la carte (--avance) ; la fleche voisine ouvre les options rares (maquette A choisie par l'utilisateur, nov. 2026). */
+    #groupe-envoi { display: flex; align-items: stretch; }
+    #groupe-envoi > #btn-envoyer { border-radius: 4px 0 0 4px; }
+    #btn-envoyer.envoi { --avance: 0%; min-width: 196px; justify-content: center; cursor: progress;
+      background: linear-gradient(90deg, #0b4277 0 var(--avance), #1c7ed6 var(--avance) 100%); }
+    #btn-envoyer.envoye { background: #2b8a3e; }
+    #btn-envoi-options { background: #1c7ed6; color: #fff; border: none; border-left: 1px solid rgba(255,255,255,0.45);
+      border-radius: 0 4px 4px 0; padding: 0 9px; min-width: 30px; font-size: 13px; cursor: pointer; }
+    #btn-envoi-options:hover { background: #1864ab; }
+    #btn-envoi-options:focus-visible, #btn-envoyer:focus-visible { outline: 3px solid #4fc3d9; outline-offset: 1px; }
+    :root[data-contrast="high"] #btn-envoyer.envoi { background: linear-gradient(90deg, #000 0 var(--avance), #fff var(--avance) 100%); color: #000; text-shadow: 0 0 3px #fff; }
+    :root[data-contrast="high"] #btn-envoi-options { background: #fff; color: #000; border: 2px solid #fff; border-left: 1px solid #000; }
+    #menu-envoi-panneau { left: auto; right: 0; min-width: 290px; }
+    .lecteur-ecran { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     #tb-direct { background: #7048e8; padding: 6px 11px; font-size: 14px; font-weight: 700; }
     #tb-direct:hover { background: #5f3dc4; }
     #tb-direct.running { background: #c0392b; }
@@ -481,8 +496,18 @@
     <button class="tb-btn vue" id="btn-vue-console" title="Afficher / masquer la console"><span class="voyant" id="voyant-robot" title="Robot non connecté"></span>Console</button>
 
     <div id="tb-droite">
-      <button class="tb-btn" id="btn-envoyer" title="Compiler et téléverser le programme dans le mBot1 : il fonctionne ensuite seul (câble USB, Chrome ou Edge)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Envoyer au robot</button>
+      <div class="tb-dropdown" id="groupe-envoi">
+        <button class="tb-btn" id="btn-envoyer" title="Compiler et envoyer le programme dans le mBot1 en un clic : il fonctionne ensuite seul (câble USB, Chrome ou Edge)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span id="btn-envoyer-label">Envoyer au robot</span></button>
+        <button id="btn-envoi-options" data-menu="menu-envoi-panneau" title="Options d'envoi" aria-label="Options d'envoi au robot" aria-haspopup="true">▾</button>
+        <div class="tb-dropdown-menu" id="menu-envoi-panneau">
+          <button id="envoi-menu-port">Changer de port USB…</button>
+          <button id="envoi-menu-microprogramme">Installer le microprogramme du mode direct</button>
+          <button id="envoi-menu-fenetre">Fenêtre d'envoi et dépannage…</button>
+          <button id="envoi-menu-aide">Aide : brancher et programmer le mBot1</button>
+        </div>
+        <span class="lecteur-ecran" id="envoi-annonce" aria-live="polite"></span>
+      </div>
       <button class="tb-btn" id="tb-direct" title="Exécuter le programme en pilotant le vrai robot par le câble USB, sans compiler (microprogramme du mode direct)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h4l2-5 4 10 2-5h4"/></svg><span id="tb-direct-label">Mode direct</span></button>
       <button id="tb-lancer" title="Lancer le programme dans le simulateur">

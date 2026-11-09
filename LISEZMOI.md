@@ -77,6 +77,12 @@ void setup() {
 
 ## Envoi au robot (téléversement)
 
+**En un clic** (maquette A choisie par l'utilisateur, nov. 2026) : « Envoyer au robot » choisit le port (fenêtre du navigateur au
+tout premier envoi seulement : un port déjà autorisé est retrouvé par `navigator.serial.getPorts()`), compile puis écrit ;
+le bouton se remplit (`--avance`) et affiche le pourcentage, puis « Envoyé ! ». Le port est choisi AVANT la compilation : le
+navigateur n'ouvre sa fenêtre de choix que juste après un clic. En cas d'échec, la fenêtre d'envoi s'ouvre avec le message.
+La flèche ▾ donne les options rares : changer de port, microprogramme du mode direct, fenêtre de dépannage, aide.
+
 1. `app.py` écrit le code dans un croquis temporaire et lance
    `arduino-cli compile --fqbn arduino:avr:uno` (dossier de construction gardé dans `%LOCALAPPDATA%\EasyblocMbot1\construction`, hors de OneDrive : dans un dossier
    synchronisé, arduino-cli s'arrêtait sans rien produire ni message ;

@@ -659,7 +659,9 @@
         '<p><b>Navigateur :</b> Chrome ou Edge sur ordinateur (le robot est relié par Web Serial).</p>' +
         '<p><b>Pilote :</b> sous Windows, la carte mCore apparaît comme « USB-SERIAL CH340 » dans le Gestionnaire de périphériques. ' +
         'Si elle n\'apparaît pas, installez le pilote CH340 (fourni avec mBlock).</p>' +
-        '<p><b>Envoyer au robot :</b> le programme est compilé sur cet ordinateur (serveur local lancé par <code>lancer_projet.bat</code>), ' +
+        '<p><b>Envoyer au robot :</b> un clic suffit. La première fois sur un ordinateur, le navigateur demande le port (choisir « USB-SERIAL CH340 ») ; ' +
+        'ensuite il s\'en souvient. Le bouton se remplit pendant l\'envoi, puis affiche « Envoyé ! ». La flèche ▾ voisine donne les options ' +
+        '(changer de port, microprogramme du mode direct, fenêtre de dépannage). Le programme est compilé sur cet ordinateur (serveur local lancé par <code>lancer_projet.bat</code>), ' +
         'puis enregistré dans la carte. Le robot fonctionne ensuite seul, même débranché, et garde le programme après l\'extinction.</p>' +
         '<p><b>Mode direct :</b> le programme s\'exécute dans l\'ordinateur et pilote le robot par le câble, sans compiler : pratique pour ' +
         'essayer vite. Il faut le microprogramme du mode direct (installé d\'usine ; sinon : « Envoyer au robot » puis « Installer le microprogramme du mode direct »). ' +

@@ -46,11 +46,17 @@
 
     // ---------- Partage du port USB entre l'envoi, la console et le mode direct (direct.js) ----------
     // Le dernier port choisi est reutilise : la fenetre de choix du navigateur ne s'ouvre qu'une fois par seance.
+    // Un port deja autorise par l'utilisateur (meme lors d'une seance precedente) est retrouve sans fenetre de choix :
+    // seul le tout premier envoi sur un poste, ou « Changer de port USB… », ouvre la fenetre du navigateur.
     const PortRobot = {
         port: null,
         async choisir(tous, nouveau) {
             if (!('serial' in navigator)) throw new Error('ce navigateur ne sait pas utiliser le port USB : ouvrez l\'éditeur dans Chrome ou Edge');
             if (this.port && !nouveau) return this.port;
+            if (!nouveau) {
+                const autorises = (await navigator.serial.getPorts()).filter(p => (p.getInfo().usbVendorId || 0) === VENDEUR_WCH);
+                if (autorises.length === 1) { this.port = autorises[0]; return this.port; }
+            }
             this.port = await navigator.serial.requestPort(tous ? {} : { filters: [{ usbVendorId: VENDEUR_WCH }] });
             return this.port;
         },
@@ -197,34 +203,69 @@
     }
     PortRobot.liberations.push(deconnecter);
 
+    // Bouton « Envoyer au robot » : il se remplit pendant l'envoi (10 % pour la compilation, le reste pour l'ecriture).
+    const bouton = $('btn-envoyer'), libelle = $('btn-envoyer-label'), annonce = $('envoi-annonce');
+    const LIBELLE = libelle.textContent;
+    let minuterieBouton = null;
+    function boutonAvance(texte, fraction) {
+        clearTimeout(minuterieBouton);
+        bouton.classList.remove('envoye');
+        bouton.classList.add('envoi');
+        bouton.setAttribute('aria-busy', 'true');
+        bouton.style.setProperty('--avance', Math.round(fraction * 100) + '%');
+        libelle.textContent = texte;
+    }
+    function boutonFin(reussi) {
+        bouton.classList.remove('envoi');
+        bouton.removeAttribute('aria-busy');
+        bouton.style.removeProperty('--avance');
+        bouton.classList.toggle('envoye', reussi);
+        libelle.textContent = reussi ? 'Envoyé !' : LIBELLE;
+        if (reussi) minuterieBouton = setTimeout(() => { bouton.classList.remove('envoye'); libelle.textContent = LIBELLE; }, 3000);
+    }
+    const annoncer = (t) => { annonce.textContent = t; };   // une annonce par etape, pas a chaque pourcentage
+
+    /**
+     * Compile puis ecrit le programme dans la carte. Le port est choisi AVANT la compilation : le navigateur n'ouvre
+     * sa fenetre de choix que juste apres un clic. En cas d'echec, la fenetre d'envoi s'ouvre avec le message.
+     */
     async function envoyer(adresse, code, nom) {
         if (occupe) return;
         occupe = true; go.disabled = goMicro.disabled = true;
         barre.style.width = '0';
         try {
+            await PortRobot.liberer();
+            afficherEtat('Choix du robot…');
+            const port = await PortRobot.choisir($('envoi-tous-ports').checked);
             afficherEtat('Compilation du programme…');
+            boutonAvance('Compilation…', 0.03); annoncer('Compilation du programme');
             const resultat = await compiler(adresse, code);
             const programme = lireHex(resultat.hex);
             barre.style.width = '10%';
             console_('Compilation réussie : ' + programme.length + ' octets sur ' + TAILLE_MAX + ' (' + Math.round(programme.length / TAILLE_MAX * 100) + ' %).', 'info');
-            await PortRobot.liberer();
-            afficherEtat('Choix du robot…');
-            const port = await PortRobot.choisir($('envoi-tous-ports').checked);
+            boutonAvance('Envoi au robot… 10 %', 0.1); annoncer('Écriture dans le robot');
             liaison = new Liaison(port, texteRobot);
             afficherEtat('Connexion au robot…');
             await liaison.ouvrir();
             majVoyant();
-            await televerserOctets(liaison, programme, f => { barre.style.width = (10 + 90 * f) + '%'; }, afficherEtat);
+            await televerserOctets(liaison, programme, f => {
+                barre.style.width = (10 + 90 * f) + '%';
+                boutonAvance('Envoi au robot… ' + Math.round(10 + 90 * f) + ' %', 0.1 + 0.9 * f);
+            }, afficherEtat);
             afficherEtat(nom + ' envoyé : le robot a démarré.', 'ok');
             console_(nom + ' envoyé au mBot1 (' + programme.length + ' octets). Console du robot ouverte.', 'ok');
+            boutonFin(true); annoncer(nom + ' envoyé : le robot a démarré');
         } catch (e) {
             const message = e && e.name === 'NotFoundError' ? 'Aucun robot choisi.' : 'Échec de l\'envoi : ' + (e && e.message ? e.message : e) + '.';
             afficherEtat(message, 'err');
+            boutonFin(false); annoncer(message);
             if (e && e.journal) console_(e.journal, 'err');
-            if (e && e.name === 'NotFoundError') PortRobot.port = null;
+            if (e && e.name === 'NotFoundError') { PortRobot.port = null; console_('Envoi annulé : aucun robot choisi.', 'info'); }
             else {
                 console_(message, 'err');
                 if (e && e.name === 'NetworkError') console_('Le port est peut-être déjà utilisé par un autre logiciel (mBlock, IDE Arduino) ou un autre onglet.', 'err');
+                // Echec : la fenetre d'envoi s'ouvre avec le message et les conseils (cable, pilote, logiciels a fermer).
+                if (!fenetre.classList.contains('ouvert')) fenetre.classList.add('ouvert');
             }
             await deconnecter();
         } finally {
@@ -248,15 +289,32 @@
         majVoyant();
     }
 
-    $('btn-envoyer').addEventListener('click', () => {
+    const envoyerProgramme = () => envoyer('compiler', window.codeArduinoCourant ? window.codeArduinoCourant() : '', 'Programme');
+    const envoyerMicroprogramme = () => envoyer('microprogramme', '', 'Microprogramme du mode direct');
+    function ouvrirFenetre() {
         afficherEtat(''); barre.style.width = '0';
         fenetre.classList.add('ouvert');
         go.focus();
+    }
+    // Un clic : compilation et envoi directs, sans fenetre.
+    $('btn-envoyer').addEventListener('click', envoyerProgramme);
+    // Options rares (menu ▾) ; « Changer de port » ouvre tout de suite la fenetre de choix du navigateur.
+    $('envoi-menu-port').addEventListener('click', async () => {
+        try {
+            await PortRobot.liberer();
+            await PortRobot.choisir($('envoi-tous-ports').checked, true);
+            console_('Port USB choisi : il servira pour les prochains envois.', 'info');
+        } catch (e) {
+            if (!(e && e.name === 'NotFoundError')) console_('Choix du port impossible : ' + (e && e.message ? e.message : e), 'err');
+        }
     });
+    $('envoi-menu-microprogramme').addEventListener('click', envoyerMicroprogramme);
+    $('envoi-menu-fenetre').addEventListener('click', ouvrirFenetre);
+    $('envoi-menu-aide').addEventListener('click', () => $('aide-envoi').click());
     $('envoi-fermer').addEventListener('click', () => fenetre.classList.remove('ouvert'));
     fenetre.addEventListener('keydown', e => { if (e.key === 'Escape' && !occupe) fenetre.classList.remove('ouvert'); });
-    go.addEventListener('click', () => envoyer('compiler', window.codeArduinoCourant ? window.codeArduinoCourant() : '', 'Programme'));
-    goMicro.addEventListener('click', () => envoyer('microprogramme', '', 'Microprogramme du mode direct'));
+    go.addEventListener('click', envoyerProgramme);
+    goMicro.addEventListener('click', envoyerMicroprogramme);
     $('envoi-autre-port').addEventListener('click', () => { PortRobot.port = null; afficherEtat('Le prochain envoi demandera le port à utiliser.'); });
     $('btn-console-robot').addEventListener('click', ecouter);
     if ('serial' in navigator) navigator.serial.addEventListener('disconnect', e => {
