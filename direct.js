@@ -14,7 +14,8 @@
     'use strict';
     const $ = id => document.getElementById(id);
     const DEBIT = 115200;
-    const DEMARRAGE = 2000;      // ms : l'ouverture du port redemarre la carte (chargeur puis microprogramme)
+    const DEMARRAGE = 1500;      // ms : l'ouverture du port redemarre la carte (chargeur puis microprogramme)
+    const ATTENTE_REPONSE = 8000; // ms : delai total pour que le microprogramme reponde apres l'ouverture du port
     const DELAI = 300;           // ms d'attente d'une reponse
     const APPAREIL = { VERSION: 0, ULTRASONS: 1, LUMIERE: 3, ROUES: 5, LED: 8, MOTEUR: 10, TELECOMMANDE: 14, LIGNE: 17,
                        NUMERIQUE: 30, ANALOGIQUE: 31, BUZZER: 34, BOUTON: 35 };
@@ -204,9 +205,16 @@
             bouton.disabled = true;
             console_('Mode direct : connexion au robot…', 'info');
             await pause(DEMARRAGE);
-            let version;
-            try { version = await liaison.lireCapteur(APPAREIL.VERSION, 0); }
-            catch (e) {
+            // Sur le vrai mBot1, le microprogramme n'ecoute qu'apres le chargeur (~1 s) et son setup() (~1 s : LED,
+            // bip, infrarouge, gyroscope) : une seule question a 2 s arrivait trop tot (essai du 10 nov. 2026).
+            // La version est donc redemandee jusqu'a ATTENTE_REPONSE apres l'ouverture du port.
+            let version = null;
+            const limite = performance.now() + ATTENTE_REPONSE - DEMARRAGE;
+            while (version === null && performance.now() < limite) {
+                try { version = await liaison.lireCapteur(APPAREIL.VERSION, 0); }
+                catch (e) { await pause(200); }
+            }
+            if (version === null) {
                 console_('Le robot ne répond pas en mode direct. Installez le microprogramme du mode direct : « Envoyer au robot », ' +
                     'puis « Installer le microprogramme du mode direct ». (Un programme envoyé depuis l\'éditeur le remplace.)', 'err');
                 await fermerLiaison();

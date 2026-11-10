@@ -109,8 +109,10 @@ Les lectures de capteurs sont des questions au robot (`await`), une à la fois.
 
 ## À vérifier sur un vrai mBot1
 
-1. **Envoi réel et mode direct** : jamais testés sur le matériel (vérifiés contre une carte et un microprogramme simulés
-   dans la page). Si la carte ne répond pas : pilote CH340, case « Afficher tous les ports série », port déjà ouvert.
+1. **Envoi réel et mode direct** : **vérifiés sur un vrai mBot1 le 10 nov. 2026** (microprogramme de 27 Ko écrit et relu,
+   mode direct connecté). Le microprogramme ne répond qu'environ 2 s après l'ouverture du port (chargeur, puis setup()) :
+   `direct.js` redemande sa version pendant 8 s. Si la carte ne répond pas : pilote CH340, case « Afficher tous les
+   ports série », port déjà ouvert. Reste à essayer sur le robot : un programme compilé envoyé en un clic.
 2. **Numéros des LED** : « LED 1 » = indice 1 de `rgbled_7.setColor`, « LED 2 » = indice 2 ; le simulateur allume la
    LED 1 à droite, sur la photo, à une position approximative (`LEDS_PHOTO`), à confirmer.
 3. Formats du mode direct : **relus dans le code du microprogramme** (`mbot_firmware.ino` de la bibliothèque, version
