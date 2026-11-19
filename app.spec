@@ -50,6 +50,7 @@ exe = EXE(
     exclude_binaries=True,
     name='Mbot1Easybloc_V1.0',
     version='version_info.txt',
+    icon='icone.ico',   # robot dessine sur fond bleu nuit (creer_icone.py, nov. 2026)
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
