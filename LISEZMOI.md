@@ -33,6 +33,7 @@ Makeblock). Il y a trois façons d'exécuter un programme :
 | `simulateur.js` | robot 2D sur piste à l'échelle (200 × 150 cm), ultrasons, suiveur de ligne, LED, buzzer, bouton, télécommande |
 | `direct.js` | mode direct : même code que le simulateur, commandes envoyées au robot (protocole série Makeblock FF 55) |
 | `televersement.js` | lecture du `.hex`, téléversement STK500 (Optiboot) par Web Serial, console du robot |
+| `logo_ts_clair.png` | logo Technologie Services à texte blanc pour le bandeau bleu nuit (le contraste élevé garde `logo_ts.png` sur pastille blanche) |
 | `mbot1.png` | photo du mBot1 vue de dessus, détourée (fond transparent) : robot du simulateur et panneau de la carte |
 | `bandeau.js` | thème, contraste, saisons et décors, puces, recherche de blocs (repris de `easybloc_ts_mbot2`) |
 | `tuto.js` | visite guidée (moteur repris de `easybloc_ts_mode_classe`, étapes mBot1) |

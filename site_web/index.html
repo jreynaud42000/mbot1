@@ -127,10 +127,9 @@
       background: var(--ec-page); color: var(--ec-pan-txt); }
     button, input, select, textarea { font-family: inherit; }
 
-    /* ═══ BANDEAU DU HAUT (charte Educatech : degrade vert d'eau -> violet et filet magenta, en sombre comme en clair ;
-       noir en contraste eleve ; couleurs propres aux themes Halloween et Noel) ═══ */
-    /* Vert d'eau assombri (#147d71 au lieu de #1f9e8f, choix de l'utilisateur, 1er nov. 2026) : texte blanc a 5,0:1
-       au lieu de 3,3:1 (minimum WCAG 4,5:1) ; cote violet inchange (8,8:1). */
+    /* ═══ BANDEAU DU HAUT : bleu nuit uni #1f2b6b, en sombre comme en clair (choix de l'utilisateur, 19 nov. 2026, a la
+       place du degrade Educatech) : texte blanc a 13:1, boutons bleu, violet et vert bien distincts ; noir en contraste
+       eleve ; couleurs propres aux themes Halloween et Noel. ═══ */
     #toolbar {
       min-height: var(--top-h); box-sizing: border-box; position: relative;
       background: var(--bandeau); color: #fff; border-bottom: 3px solid var(--couleur-bandeau);
@@ -141,9 +140,9 @@
     :root:not([data-theme="light"]) #toolbar { background: var(--bandeau-sombre); }
     :root[data-contrast="high"] #toolbar { background: #000; border-bottom: 2px solid var(--bordure-chrome); }
     :root[data-theme="light"]:not([data-contrast="high"]) #toolbar {
-      background: linear-gradient(90deg, #147d71, #6a2c91); border-bottom: none; }   /* sans filet magenta (demande de l'utilisateur, nov. 2026) */
+      background: #1f2b6b; border-bottom: none; }   /* sans filet magenta (demande de l'utilisateur, nov. 2026) */
     :root:is([data-saison="salon"], :not([data-saison])):not([data-theme="light"]):not([data-contrast="high"]) #toolbar {
-      background: linear-gradient(90deg, #147d71, #6a2c91); border-bottom: none; }   /* sans filet magenta (demande de l'utilisateur, nov. 2026) */
+      background: #1f2b6b; border-bottom: none; }   /* sans filet magenta (demande de l'utilisateur, nov. 2026) */
     :root[data-saison]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar { border-bottom-color: var(--accent-fonce); }
     :root[data-saison="halloween"]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar {
       border-bottom: 4px solid #ff7a1a;
@@ -164,6 +163,11 @@
     /* Contraste eleve : bandeau noir, le texte noir du logo y disparaitrait ; la pastille blanche reste dans ce mode seul. */
     :root[data-contrast="high"] #tb-logo { background: #fff; border-radius: 5px; }
     #tb-logo img { height: 24px; width: auto; display: block; }
+    /* Bandeaux fonces : logo a texte blanc (logo_ts_clair.png, pictogramme orange inchange, choix de l'utilisateur,
+       19 nov. 2026) ; contraste eleve : logo d'origine sur sa pastille blanche. */
+    #tb-logo .logo-origine { display: none; }
+    :root[data-contrast="high"] #tb-logo .logo-clair { display: none; }
+    :root[data-contrast="high"] #tb-logo .logo-origine { display: block; }
     #tb-titre { font-weight: 700; font-size: 14px; margin: 0 6px 0 2px; white-space: nowrap; }
     #tb-nomfichier { max-width: 240px; background: #fff; color: var(--couleur-bandeau); font-weight: 700;
       padding: 4px 10px; margin: 0 2px; border: 2px solid #fff; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); cursor: text; }
@@ -447,7 +451,7 @@
 </head>
 <body>
   <div id="toolbar">
-    <span id="tb-logo" title="Technologie Services"><img src="logo_ts.png" alt="Technologie Services"></span>
+    <span id="tb-logo" title="Technologie Services"><img class="logo-clair" src="logo_ts_clair.png" alt="Technologie Services"><img class="logo-origine" src="logo_ts.png" alt="Technologie Services"></span>
     <span id="tb-titre">mBot1</span>
 
     <div class="tb-dropdown">
