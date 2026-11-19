@@ -42,7 +42,27 @@ def dossier_de_lapplication():
 DOSSIER = dossier_de_lapplication()
 OUTILS = os.path.join(DOSSIER, "outils")
 CONFIG = os.path.join(OUTILS, "arduino-cli.yaml")
-CONSTRUCTION = os.path.join(os.environ.get("LOCALAPPDATA") or tempfile.gettempdir(), "EasyblocMbot1", "construction")
+DONNEES_LOCALES = os.path.join(os.environ.get("LOCALAPPDATA") or tempfile.gettempdir(), "EasyblocMbot1")
+CONSTRUCTION = os.path.join(DONNEES_LOCALES, "construction")
+
+
+def configuration_exe():
+    """Exe PyInstaller : outils/arduino-cli.yaml (ecrit par installer_outils.py) contient les chemins ABSOLUS du poste
+    ou les outils ont ete installes ; il n'est pas embarque. L'exe ecrit sa propre configuration, hors de son dossier,
+    qui pointe vers les outils embarques (_internal/outils) ; les telechargements eventuels vont dans le dossier local."""
+    global CONFIG
+    if not getattr(sys, "frozen", False):
+        return
+    os.makedirs(DONNEES_LOCALES, exist_ok=True)
+    CONFIG = os.path.join(DONNEES_LOCALES, "arduino-cli.yaml")
+    yaml = lambda chemin: chemin.replace("'", "''")   # apostrophe dans un chemin (« Documents d'Élève »)
+    with open(CONFIG, "w", encoding="utf-8") as f:
+        f.write("directories:\n  data: '%s'\n  downloads: '%s'\n  user: '%s'\n" % (
+            yaml(os.path.join(OUTILS, "arduino15")), yaml(os.path.join(DONNEES_LOCALES, "telechargements")),
+            yaml(os.path.join(OUTILS, "arduino"))))
+
+
+configuration_exe()
 verrou_compilation = threading.Lock()   # une compilation a la fois (meme dossier de construction)
 
 

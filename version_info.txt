@@ -1,0 +1,33 @@
+# UTF-8
+#
+# Ressource de version de l'exe Windows (onglet "Details" des proprietes du fichier).
+# Utilisee par app.spec (version='version_info.txt'). Pour changer de version, modifier
+# filevers/prodvers (nombres) ET les chaines FileVersion/ProductVersion, ainsi que
+# VERSION dans app.py, le nom de l'exe dans app.spec et le texte .menu-version de index.html.
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 0, 0, 0),
+    prodvers=(1, 0, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+        StringTable(
+          '040C04B0',
+          [StringStruct('CompanyName', 'RAJ Editions'),
+           StringStruct('FileDescription', 'Programmation mBot1 (Easybloc)'),
+           StringStruct('FileVersion', 'V1.0'),
+           StringStruct('InternalName', 'Mbot1Easybloc'),
+           StringStruct('OriginalFilename', 'Mbot1Easybloc_V1.0.exe'),
+           StringStruct('ProductName', 'Programmation mBot1'),
+           StringStruct('ProductVersion', 'V1.0')])
+      ]),
+    VarFileInfo([VarStruct('Translation', [1036, 1200])])
+  ]
+)

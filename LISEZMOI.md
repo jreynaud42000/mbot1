@@ -22,6 +22,25 @@ Makeblock). Il y a trois façons d'exécuter un programme :
 - Pour relier le robot : **Chrome ou Edge** (Web Serial). Fermer mBlock et l'IDE Arduino avant.
 - Aucune dépendance Python (bibliothèque standard) ; Blockly 10.4.3 est embarqué dans `lib/blockly` (aucun CDN).
 
+## Exécutable Windows (V1.0, nov. 2026)
+
+`dist/Mbot1Easybloc_V1.0/Mbot1Easybloc_V1.0.exe` (PyInstaller, mode dossier comme l'éditeur micro:bit) : **rien à
+installer**, ni Python ni outils. Distribuer le zip `dist/Mbot1Easybloc_V1.0.zip` (120 Mo, 358 Mo une fois décompressé)
+et lancer l'exe depuis le dossier décompressé, jamais l'exe seul.
+
+- Les **outils de compilation sont embarqués** (`_internal/outils` : arduino-cli, noyau Arduino AVR, bibliothèque
+  Makeblock déjà corrigée par `installer_outils.py`) : « Envoyer au robot » et la réinstallation du microprogramme du
+  mode direct fonctionnent hors ligne. Laissés de côté : les archives téléchargées, l'index des bibliothèques (57 Mo,
+  inutile pour compiler) et `outils/arduino-cli.yaml`, qui contient les chemins absolus du poste d'installation.
+- Au démarrage, l'exe écrit sa propre configuration arduino-cli dans `%LOCALAPPDATA%\EasyblocMbot1\arduino-cli.yaml`
+  (chemins vers `_internal/outils`) ; la construction reste dans `%LOCALAPPDATA%\EasyblocMbot1\construction`.
+  La première compilation sur un poste prend environ 30 s (noyau Arduino), les suivantes sont plus rapides.
+- Port 8030, ou le suivant libre (jusqu'à 8039). `Mbot1Easybloc_V1.0.exe --sans-navigateur` n'ouvre pas le navigateur.
+- Reconstruire : `installer_outils.bat` une fois (pour remplir `outils/`), puis `python -m PyInstaller --noconfirm app.spec`
+  (recette `app.spec`, version Windows `version_info.txt`) ; `build/` et `dist/` sont exclus de git.
+- Vérifié le 19/11/2026 : contenu identique aux sources ; l'exe lancé sans navigateur sert la page et compile un programme
+  (moteurs + ultrasons, `.hex` de 400 lignes) et le microprogramme du mode direct (1 703 lignes), avec les outils embarqués.
+
 ## Fichiers
 
 | Fichier | Rôle |
